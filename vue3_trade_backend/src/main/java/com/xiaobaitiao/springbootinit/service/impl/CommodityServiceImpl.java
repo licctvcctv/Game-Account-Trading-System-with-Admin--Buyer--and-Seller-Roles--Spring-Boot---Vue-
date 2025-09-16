@@ -56,10 +56,14 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         // todo 从对象中取值
         String commodityName = commodity.getCommodityName();
         Integer commodityInventory = commodity.getCommodityInventory();
+        Integer tradeType = commodity.getTradeType();
         // 创建数据时，参数不能为空
         if (add) {
             ThrowUtils.throwIf(StringUtils.isBlank(commodityName), ErrorCode.PARAMS_ERROR);
             ThrowUtils.throwIf(commodityInventory == null || commodityInventory <= 0, ErrorCode.PARAMS_ERROR);
+        }
+        if (tradeType != null) {
+            ThrowUtils.throwIf(tradeType != 1 && tradeType != 2, ErrorCode.PARAMS_ERROR);
         }
     }
 
@@ -84,6 +88,7 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         Long adminId = commodityQueryRequest.getAdminId();
         Integer isListed = commodityQueryRequest.getIsListed();
         Integer commodityInventory = commodityQueryRequest.getCommodityInventory();
+        Integer tradeType = commodityQueryRequest.getTradeType();
         String sortField = commodityQueryRequest.getSortField();
         String sortOrder = commodityQueryRequest.getSortOrder();
         // 模糊查询
@@ -96,6 +101,7 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         queryWrapper.eq(ObjectUtils.isNotEmpty(adminId), "adminId", adminId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(commodityInventory), "commodityInventory", commodityInventory);
         queryWrapper.eq(ObjectUtils.isNotEmpty(isListed), "isListed", isListed);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(tradeType), "tradeType", tradeType);
         // 排序规则
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
                 sortOrder.equals(CommonConstant.SORT_ORDER_ASC),

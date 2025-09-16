@@ -74,6 +74,22 @@ public class User implements Serializable {
      */
     private BigDecimal balance;
     /**
+     * 是否拥有出售权限（0-否 1-是）
+     */
+    private Integer sellPermission;
+    /**
+     * 是否拥有出租权限（0-否 1-是）
+     */
+    private Integer rentPermission;
+    /**
+     * 出售功能申请状态（0-未申请 1-审核中 2-已通过 3-已拒绝）
+     */
+    private Integer sellApplyStatus;
+    /**
+     * 出租功能申请状态（0-未申请 1-审核中 2-已通过 3-已拒绝）
+     */
+    private Integer rentApplyStatus;
+    /**
      * 用户 AI 剩余可使用次数
      */
     private Integer aiRemainNumber;

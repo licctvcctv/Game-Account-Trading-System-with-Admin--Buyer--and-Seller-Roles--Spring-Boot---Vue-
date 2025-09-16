@@ -9,4 +9,8 @@ export interface UserState {
   menuRoutes: RouteRecordRaw[];
   userRole: string;
   id: number | string;
+  sellPermission: number | null;
+  rentPermission: number | null;
+  sellApplyStatus: number | null;
+  rentApplyStatus: number | null;
 }

@@ -47,6 +47,11 @@ public class CommodityVO implements Serializable {
      * 商品分类 ID
      */
     private Long commodityTypeId;
+
+    /**
+     * 交易类型：1-出售 2-出租
+     */
+    private Integer tradeType;
     /**
      * 商品分类名称
      */

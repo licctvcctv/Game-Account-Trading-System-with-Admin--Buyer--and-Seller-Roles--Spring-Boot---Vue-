@@ -33,3 +33,31 @@ export const SET_USER_NAME = (userName: string) => {
 export const GET_USER_NAME = () => {
   return localStorage.getItem("userName") ?? "";
 };
+export const SET_SELL_PERMISSION = (permission: number) => {
+  localStorage.setItem("sellPermission", String(permission));
+};
+export const GET_SELL_PERMISSION = () => {
+  const value = localStorage.getItem("sellPermission");
+  return value === null ? null : Number(value);
+};
+export const SET_RENT_PERMISSION = (permission: number) => {
+  localStorage.setItem("rentPermission", String(permission));
+};
+export const GET_RENT_PERMISSION = () => {
+  const value = localStorage.getItem("rentPermission");
+  return value === null ? null : Number(value);
+};
+export const SET_SELL_APPLY_STATUS = (status: number) => {
+  localStorage.setItem("sellApplyStatus", String(status));
+};
+export const GET_SELL_APPLY_STATUS = () => {
+  const value = localStorage.getItem("sellApplyStatus");
+  return value === null ? null : Number(value);
+};
+export const SET_RENT_APPLY_STATUS = (status: number) => {
+  localStorage.setItem("rentApplyStatus", String(status));
+};
+export const GET_RENT_APPLY_STATUS = () => {
+  const value = localStorage.getItem("rentApplyStatus");
+  return value === null ? null : Number(value);
+};

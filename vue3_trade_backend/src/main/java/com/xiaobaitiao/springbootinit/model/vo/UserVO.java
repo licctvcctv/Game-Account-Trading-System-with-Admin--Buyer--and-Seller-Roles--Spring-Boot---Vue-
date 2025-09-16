@@ -7,9 +7,6 @@ import lombok.Data;
 
 /**
  * 用户视图（脱敏）
- *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
  */
 @Data
 public class UserVO implements Serializable {
@@ -46,6 +43,14 @@ public class UserVO implements Serializable {
      * 用户余额
      */
     private BigDecimal balance;
+
+    private Integer sellPermission;
+
+    private Integer rentPermission;
+
+    private Integer sellApplyStatus;
+
+    private Integer rentApplyStatus;
     /**
      * 用户 AI 剩余可使用次数
      */

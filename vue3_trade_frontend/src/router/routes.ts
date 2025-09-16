@@ -294,7 +294,7 @@ export const asnycUserRoute = [
         meta: {
           title: "AI对话",
           icon: "Microphone",
-          hidden: false
+          hidden: true
         }
       },
       {

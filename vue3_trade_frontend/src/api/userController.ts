@@ -182,3 +182,33 @@ export async function updateMyUserUsingPost(
     ...(options || {})
   });
 }
+
+/** updateMyBalance POST /api/user/balance/update */
+export async function updateMyBalanceUsingPost(
+  body: API.UserBalanceUpdateRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>("/api/user/balance/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    data: body,
+    ...(options || {})
+  });
+}
+
+/** applySeller POST /api/user/seller/apply */
+export async function applySellerUsingPost(
+  body: API.SellerApplyRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>("/api/user/seller/apply", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    data: body,
+    ...(options || {})
+  });
+}

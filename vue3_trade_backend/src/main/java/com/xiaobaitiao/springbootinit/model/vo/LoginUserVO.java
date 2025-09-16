@@ -1,15 +1,13 @@
 package com.xiaobaitiao.springbootinit.model.vo;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.Date;
 import lombok.Data;
 
 /**
  * 已登录用户视图（脱敏）
- *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
- **/
+ */
 @Data
 public class LoginUserVO implements Serializable {
 
@@ -38,9 +36,29 @@ public class LoginUserVO implements Serializable {
      */
     private String userRole;
     /**
-     * 用户余额（仅 AI 接口调用）
+     * 用户余额
      */
-    private Integer balance;
+    private BigDecimal balance;
+
+    /**
+     * 是否拥有出售权限（0-否 1-是）
+     */
+    private Integer sellPermission;
+
+    /**
+     * 是否拥有出租权限（0-否 1-是）
+     */
+    private Integer rentPermission;
+
+    /**
+     * 出售权限申请状态（0-未申请 1-审核中 2-已通过 3-已拒绝）
+     */
+    private Integer sellApplyStatus;
+
+    /**
+     * 出租权限申请状态（0-未申请 1-审核中 2-已通过 3-已拒绝）
+     */
+    private Integer rentApplyStatus;
 
     /**
      * 创建时间

@@ -8,12 +8,20 @@ import type { UserState } from "./types/type";
 import {
   GET_ROLE,
   GET_TOKEN,
+  GET_RENT_APPLY_STATUS,
+  GET_RENT_PERMISSION,
+  GET_SELL_APPLY_STATUS,
+  GET_SELL_PERMISSION,
   REMOVE_TOKEN,
   SET_AVATAR,
   SET_ID,
   SET_ROLE,
+  SET_RENT_APPLY_STATUS,
+  SET_RENT_PERMISSION,
   SET_TOKEN,
-  SET_USER_NAME
+  SET_USER_NAME,
+  SET_SELL_APPLY_STATUS,
+  SET_SELL_PERMISSION
 } from "@/utils/token";
 //引入路由(常量路由)
 import {
@@ -37,7 +45,11 @@ const useUserStore = defineStore("User", {
       //存储当前用户是否包含某一个按钮
       buttons: [],
       userRole: "",
-      id: ""
+      id: "",
+      sellPermission: GET_SELL_PERMISSION(),
+      rentPermission: GET_RENT_PERMISSION(),
+      sellApplyStatus: GET_SELL_APPLY_STATUS(),
+      rentApplyStatus: GET_RENT_APPLY_STATUS()
     };
   },
   //异步|逻辑的地方
@@ -53,6 +65,12 @@ const useUserStore = defineStore("User", {
         this.userName = result.data.userName;
         this.userRole = result.data.userRole;
         this.avatar = result.data.userAvatar;
+        this.syncSellerInfo({
+          sellPermission: result.data.sellPermission,
+          rentPermission: result.data.rentPermission,
+          sellApplyStatus: result.data.sellApplyStatus,
+          rentApplyStatus: result.data.rentApplyStatus
+        });
         if (this.userRole == "admin") {
           this.menuRoutes = [...constantRoute, ...asnycAdminRoute, anyRoute];
         } else if (this.userRole == "user") {
@@ -71,6 +89,10 @@ const useUserStore = defineStore("User", {
         SET_AVATAR(result.data.userAvatar as string);
         // 本地存储用户昵称
         SET_USER_NAME(result.data.userName);
+        SET_SELL_PERMISSION(this.sellPermission ?? 0);
+        SET_RENT_PERMISSION(this.rentPermission ?? 0);
+        SET_SELL_APPLY_STATUS(this.sellApplyStatus ?? 0);
+        SET_RENT_APPLY_STATUS(this.rentApplyStatus ?? 0);
         //能保证当前async函数返回一个成功的promise
         return "ok";
       } else {
@@ -83,6 +105,10 @@ const useUserStore = defineStore("User", {
       // const id = GET_ID();
       // const userId = parseInt(id as string);
       const userRole = GET_ROLE();
+      this.sellPermission = GET_SELL_PERMISSION();
+      this.rentPermission = GET_RENT_PERMISSION();
+      this.sellApplyStatus = GET_SELL_APPLY_STATUS();
+      this.rentApplyStatus = GET_RENT_APPLY_STATUS();
       // await reqUserInfo(userId);
       if (userRole == "admin") {
         this.menuRoutes = [...constantRoute, ...asnycAdminRoute, anyRoute];
@@ -101,13 +127,32 @@ const useUserStore = defineStore("User", {
       //目前没有mock接口:退出登录接口(通知服务器本地用户唯一标识失效)
       this.token = "";
       this.userName = "";
+      this.sellPermission = 0;
+      this.rentPermission = 0;
+      this.sellApplyStatus = 0;
+      this.rentApplyStatus = 0;
       REMOVE_TOKEN();
+      SET_SELL_PERMISSION(0);
+      SET_RENT_PERMISSION(0);
+      SET_SELL_APPLY_STATUS(0);
+      SET_RENT_APPLY_STATUS(0);
       return "ok";
     },
     // 更新头像的方法
     async updateAvatar(newAvatar: string) {
       this.avatar = newAvatar;
       SET_AVATAR(newAvatar); // 同步更新本地存储
+    },
+    syncSellerInfo(payload: {
+      sellPermission?: number | null;
+      rentPermission?: number | null;
+      sellApplyStatus?: number | null;
+      rentApplyStatus?: number | null;
+    }) {
+      this.sellPermission = payload.sellPermission ?? 0;
+      this.rentPermission = payload.rentPermission ?? 0;
+      this.sellApplyStatus = payload.sellApplyStatus ?? 0;
+      this.rentApplyStatus = payload.rentApplyStatus ?? 0;
     }
   },
   getters: {}

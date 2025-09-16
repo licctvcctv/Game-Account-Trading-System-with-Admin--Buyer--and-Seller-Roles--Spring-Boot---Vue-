@@ -47,6 +47,11 @@ public class Commodity implements Serializable {
     private Long commodityTypeId;
 
     /**
+     * 交易类型：1-出售 2-出租
+     */
+    private Integer tradeType;
+
+    /**
      * 管理员 ID （某人创建该商品）
      */
     private Long adminId;

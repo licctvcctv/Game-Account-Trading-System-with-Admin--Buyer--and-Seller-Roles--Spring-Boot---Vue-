@@ -11,7 +11,15 @@
     </el-card>
 
     <el-card class="form-card">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">
+      <el-alert
+        v-if="!allowPublish"
+        title="暂无权限"
+        type="warning"
+        description="请先在个人主页申请出售或出租权限，审核通过后即可发布账号"
+        show-icon
+        class="mb16"
+      />
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" :disabled="!allowPublish">
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="账号名称" prop="commodityName">
@@ -36,6 +44,14 @@
                 show-word-limit
                 placeholder="一句话介绍你的账号，支持 500 字"
               />
+            </el-form-item>
+          </el-col>
+
+          <el-col :span="8">
+            <el-form-item label="交易类型" prop="tradeType">
+              <el-select v-model="form.tradeType" placeholder="请选择交易类型">
+                <el-option v-for="opt in tradeTypeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+              </el-select>
             </el-form-item>
           </el-col>
 
@@ -87,7 +103,7 @@
 
         <div class="actions">
           <el-button @click="reset">重置</el-button>
-          <el-button type="primary" :loading="submitting" @click="submit">发布</el-button>
+          <el-button type="primary" :loading="submitting" :disabled="!allowPublish" @click="submit">发布</el-button>
         </div>
       </el-form>
     </el-card>
@@ -96,13 +112,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Picture } from "@element-plus/icons-vue";
 import { addCommodityUsingPost } from "@/api/commodityController";
 import { listCommodityTypeVoByPageUsingPost } from "@/api/commodityTypeController";
 import { uploadFileUsingPost } from "@/api/fileController";
+import useUserStore from "@/store/modules/user";
 
 type TypeItem = { id: number; typeName: string };
 
@@ -110,6 +127,20 @@ const formRef = ref();
 const submitting = ref(false);
 const router = useRouter();
 const commodityTypeList = ref<TypeItem[]>([]);
+const userStore = useUserStore();
+
+const allowPublish = computed(() => (userStore.sellPermission ?? 0) === 1 || (userStore.rentPermission ?? 0) === 1);
+
+const tradeTypeOptions = computed(() => {
+  const options: { label: string; value: number }[] = [];
+  if ((userStore.sellPermission ?? 0) === 1) {
+    options.push({ label: "出售", value: 1 });
+  }
+  if ((userStore.rentPermission ?? 0) === 1) {
+    options.push({ label: "出租", value: 2 });
+  }
+  return options;
+});
 
 const form = ref({
   commodityName: "",
@@ -119,14 +150,16 @@ const form = ref({
   isListed: 1,
   commodityInventory: 1,
   price: undefined as unknown as number | undefined,
-  commodityAvatar: ""
+  commodityAvatar: "",
+  tradeType: undefined as unknown as number | undefined
 });
 
 const rules = {
   commodityName: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
   commodityTypeId: [{ required: true, message: "请选择分类", trigger: "change" }],
   price: [{ required: true, message: "请输入价格", trigger: "blur" }],
-  commodityInventory: [{ required: true, message: "请输入库存", trigger: "blur" }]
+  commodityInventory: [{ required: true, message: "请输入库存", trigger: "blur" }],
+  tradeType: [{ required: true, message: "请选择交易类型", trigger: "change" }]
 };
 
 const loadTypes = async () => {
@@ -136,8 +169,35 @@ const loadTypes = async () => {
   }
 };
 
-onMounted(() => {
-  loadTypes();
+const initData = async () => {
+  await loadTypes();
+  if (tradeTypeOptions.value.length > 0 && !tradeTypeOptions.value.find((item) => item.value === form.value.tradeType)) {
+    form.value.tradeType = tradeTypeOptions.value[0].value;
+  }
+};
+
+onMounted(async () => {
+  if (!allowPublish.value) {
+    ElMessage.warning("请先申请出售或出租权限");
+  } else {
+    await initData();
+  }
+});
+
+watch(
+  tradeTypeOptions,
+  (options) => {
+    if (options.length > 0 && !options.find((item) => item.value === form.value.tradeType)) {
+      form.value.tradeType = options[0].value;
+    }
+  },
+  { immediate: true }
+);
+
+watch(allowPublish, async (val, oldVal) => {
+  if (val && !oldVal) {
+    await initData();
+  }
 });
 
 const beforeUpload = (file: File) => {
@@ -173,6 +233,9 @@ const doUpload = async (options: any) => {
 const reset = () => {
   formRef.value?.resetFields();
   form.value.commodityAvatar = "";
+  if (tradeTypeOptions.value.length > 0) {
+    form.value.tradeType = tradeTypeOptions.value[0].value;
+  }
 };
 
 const submit = async () => {
@@ -188,7 +251,8 @@ const submit = async () => {
         isListed: form.value.isListed,
         commodityInventory: form.value.commodityInventory,
         price: form.value.price,
-        commodityAvatar: form.value.commodityAvatar
+        commodityAvatar: form.value.commodityAvatar,
+        tradeType: form.value.tradeType
       };
       const res: any = await addCommodityUsingPost(payload);
       if (res.code === 200) {

@@ -2,7 +2,11 @@ package com.xiaobaitiao.springbootinit.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaobaitiao.springbootinit.annotation.AuthCheck;
-import com.xiaobaitiao.springbootinit.common.*;
+import com.xiaobaitiao.springbootinit.common.BaseResponse;
+import com.xiaobaitiao.springbootinit.common.DeleteRequest;
+import com.xiaobaitiao.springbootinit.common.ErrorCode;
+import com.xiaobaitiao.springbootinit.common.JwtKit;
+import com.xiaobaitiao.springbootinit.common.ResultUtils;
 import com.xiaobaitiao.springbootinit.config.WxOpenConfig;
 import com.xiaobaitiao.springbootinit.constant.UserConstant;
 import com.xiaobaitiao.springbootinit.exception.BusinessException;
@@ -12,6 +16,12 @@ import com.xiaobaitiao.springbootinit.model.entity.User;
 import com.xiaobaitiao.springbootinit.model.vo.LoginUserVO;
 import com.xiaobaitiao.springbootinit.model.vo.UserVO;
 import com.xiaobaitiao.springbootinit.service.UserService;
+import java.math.BigDecimal;
+import java.util.HashMap;
+import java.util.List;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 import me.chanjar.weixin.common.bean.oauth2.WxOAuth2AccessToken;
@@ -22,19 +32,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.List;
-
 import static com.xiaobaitiao.springbootinit.service.impl.UserServiceImpl.SALT;
 
 /**
  * 用户接口
- *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
  */
 @RestController
 @RequestMapping("/user")
@@ -226,6 +227,12 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
+        if (userUpdateRequest.getSellPermission() != null && userUpdateRequest.getSellPermission() == 1) {
+            user.setSellApplyStatus(2);
+        }
+        if (userUpdateRequest.getRentPermission() != null && userUpdateRequest.getRentPermission() == 1) {
+            user.setRentApplyStatus(2);
+        }
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
@@ -327,6 +334,76 @@ public class UserController {
         user.setId(loginUser.getId());
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 更新个人余额
+     */
+    @PostMapping("/balance/update")
+    public BaseResponse<Boolean> updateMyBalance(@RequestBody UserBalanceUpdateRequest balanceUpdateRequest,
+            HttpServletRequest request) {
+        if (balanceUpdateRequest == null || balanceUpdateRequest.getBalance() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        BigDecimal newBalance = balanceUpdateRequest.getBalance();
+        if (newBalance.compareTo(BigDecimal.ZERO) < 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "余额不能为负数");
+        }
+        User loginUser = userService.getLoginUser(request);
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        updateUser.setBalance(newBalance);
+        boolean result = userService.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        loginUser.setBalance(newBalance);
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUser);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 申请出售/出租权限
+     */
+    @PostMapping("/seller/apply")
+    public BaseResponse<Boolean> applySeller(@RequestBody SellerApplyRequest sellerApplyRequest,
+            HttpServletRequest request) {
+        if (sellerApplyRequest == null || StringUtils.isBlank(sellerApplyRequest.getApplyType())) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        User loginUser = userService.getLoginUser(request);
+        String type = sellerApplyRequest.getApplyType().toUpperCase();
+        User updateUser = new User();
+        updateUser.setId(loginUser.getId());
+        switch (type) {
+            case "SELL":
+                if (loginUser.getSellPermission() != null && loginUser.getSellPermission() == 1) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "已拥有出售权限");
+                }
+                if (loginUser.getSellApplyStatus() != null && loginUser.getSellApplyStatus() == 1) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "出售权限审核中");
+                }
+                updateUser.setSellApplyStatus(1);
+                break;
+            case "RENT":
+                if (loginUser.getRentPermission() != null && loginUser.getRentPermission() == 1) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "已拥有出租权限");
+                }
+                if (loginUser.getRentApplyStatus() != null && loginUser.getRentApplyStatus() == 1) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "出租权限审核中");
+                }
+                updateUser.setRentApplyStatus(1);
+                break;
+            default:
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "申请类型错误");
+        }
+        boolean result = userService.updateById(updateUser);
+        ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        if ("SELL".equals(type)) {
+            loginUser.setSellApplyStatus(1);
+        } else {
+            loginUser.setRentApplyStatus(1);
+        }
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUser);
         return ResultUtils.success(true);
     }
 }

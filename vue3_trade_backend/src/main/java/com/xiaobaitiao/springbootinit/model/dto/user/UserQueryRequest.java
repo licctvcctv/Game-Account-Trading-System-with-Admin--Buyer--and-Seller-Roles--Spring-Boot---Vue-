@@ -9,9 +9,6 @@ import lombok.EqualsAndHashCode;
 
 /**
  * 用户查询请求
- *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -52,6 +49,26 @@ public class UserQueryRequest extends PageRequest implements Serializable {
      * 用户角色：user/admin/ban
      */
     private String userRole;
+
+    /**
+     * 是否拥有出售权限
+     */
+    private Integer sellPermission;
+
+    /**
+     * 是否拥有出租权限
+     */
+    private Integer rentPermission;
+
+    /**
+     * 出售申请状态
+     */
+    private Integer sellApplyStatus;
+
+    /**
+     * 出租申请状态
+     */
+    private Integer rentApplyStatus;
 
     private static final long serialVersionUID = 1L;
 }

@@ -67,13 +67,16 @@ public class CommodityController {
     @PostMapping("/add")
     public BaseResponse<Long> addCommodity(@RequestBody CommodityAddRequest commodityAddRequest, HttpServletRequest request) {
         ThrowUtils.throwIf(commodityAddRequest == null, ErrorCode.PARAMS_ERROR);
-        // todo 在此处将实体类和 DTO 进行转换
         Commodity commodity = new Commodity();
         BeanUtils.copyProperties(commodityAddRequest, commodity);
         // 数据校验
         commodityService.validCommodity(commodity, true);
         // todo 填充默认值
         User loginUser = userService.getLoginUser(request);
+        if (commodity.getTradeType() == null) {
+            commodity.setTradeType(1);
+        }
+        checkSellerPermission(loginUser, commodity.getTradeType());
         commodity.setAdminId(loginUser.getId());
         // 写入数据库
         boolean result = commodityService.save(commodity);
@@ -232,7 +235,6 @@ public class CommodityController {
         if (commodityEditRequest == null || commodityEditRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // todo 在此处将实体类和 DTO 进行转换
         Commodity commodity = new Commodity();
         BeanUtils.copyProperties(commodityEditRequest, commodity);
         // 数据校验
@@ -253,6 +255,11 @@ public class CommodityController {
             boolean isOwner = oldCommodity.getAdminId() != null && oldCommodity.getAdminId().equals(loginUser.getId());
             if (!isAdmin && !isOwner) {
                 throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+            }
+            if (!isAdmin) {
+                Integer tradeType = commodity.getTradeType() != null ? commodity.getTradeType()
+                        : (oldCommodity.getTradeType() == null ? 1 : oldCommodity.getTradeType());
+                checkSellerPermission(loginUser, tradeType);
             }
         }
 
@@ -537,4 +544,19 @@ public class CommodityController {
                 .collect(Collectors.toList());
     }
     // endregion
+
+    private void checkSellerPermission(User user, Integer tradeType) {
+        if (user == null || tradeType == null) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+        if (tradeType == 1) {
+            if (user.getSellPermission() == null || user.getSellPermission() != 1) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "暂无出售权限，请先申请并通过审核");
+            }
+        } else if (tradeType == 2) {
+            if (user.getRentPermission() == null || user.getRentPermission() != 1) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "暂无出租权限，请先申请并通过审核");
+            }
+        }
+    }
 }

@@ -472,6 +472,7 @@ declare namespace API {
     commodityInventory?: number;
     commodityName?: string;
     commodityTypeId?: number;
+    tradeType?: number;
     createTime?: string;
     degree?: string;
     favourNum?: number;
@@ -490,6 +491,7 @@ declare namespace API {
     commodityInventory?: number;
     commodityName?: string;
     commodityTypeId?: number;
+    tradeType?: number;
     degree?: string;
     favourNum?: number;
     isListed?: number;
@@ -504,6 +506,7 @@ declare namespace API {
     commodityInventory?: number;
     commodityName?: string;
     commodityTypeId?: number;
+    tradeType?: number;
     degree?: string;
     favourNum?: number;
     id?: number;
@@ -588,6 +591,7 @@ declare namespace API {
     commodityInventory?: number;
     commodityName?: string;
     commodityTypeId?: number;
+    tradeType?: number;
     current?: number;
     degree?: string;
     favourNum?: number;
@@ -696,6 +700,7 @@ declare namespace API {
     commodityInventory?: number;
     commodityName?: string;
     commodityTypeId?: number;
+    tradeType?: number;
     degree?: string;
     favourNum?: number;
     id?: number;
@@ -713,6 +718,7 @@ declare namespace API {
     commodityName?: string;
     commodityTypeId?: number;
     commodityTypeName?: string;
+    tradeType?: number;
     createTime?: string;
     degree?: string;
     favourNum?: number;
@@ -818,6 +824,10 @@ declare namespace API {
     userName?: string;
     userProfile?: string;
     userRole?: string;
+    sellPermission?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    rentApplyStatus?: number;
   };
 
   type MapStringObject_ = true;
@@ -1526,6 +1536,10 @@ declare namespace API {
     userName?: string;
     userProfile?: string;
     userRole?: string;
+    sellPermission?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    rentApplyStatus?: number;
   };
 
   type UserRegisterRequest = {
@@ -1540,6 +1554,14 @@ declare namespace API {
     userProfile?: string;
   };
 
+  type UserBalanceUpdateRequest = {
+    balance?: number;
+  };
+
+  type SellerApplyRequest = {
+    applyType?: string;
+  };
+
   type UserUpdateRequest = {
     aiRemainNumber?: number;
     balance?: number;
@@ -1548,6 +1570,10 @@ declare namespace API {
     userName?: string;
     userProfile?: string;
     userRole?: string;
+    sellPermission?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    rentApplyStatus?: number;
   };
 
   type UserVO = {
@@ -1560,5 +1586,9 @@ declare namespace API {
     userPhone?: string;
     userProfile?: string;
     userRole?: string;
+    sellPermission?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    rentApplyStatus?: number;
   };
 }

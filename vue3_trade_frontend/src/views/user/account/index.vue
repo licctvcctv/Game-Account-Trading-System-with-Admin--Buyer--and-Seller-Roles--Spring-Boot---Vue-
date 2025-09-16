@@ -80,6 +80,43 @@
                 style="margin-top: 20px"
               ></el-input>
             </el-row>
+            <el-row style="margin-bottom: 20px" align="middle">
+              <el-col>
+                账户余额：
+                <el-tag type="success">¥{{ Number(user.balance ?? 0).toFixed(2) }}</el-tag>
+                <el-button size="small" style="margin-left: 12px" @click="openBalanceDialog">调整余额</el-button>
+              </el-col>
+            </el-row>
+            <el-row style="margin-bottom: 16px" align="middle">
+              <el-col>
+                出售权限：
+                <el-tag :type="getStatusTagType(user.sellPermission ?? 0, user.sellApplyStatus ?? 0)">
+                  {{ getPermissionStatusText(user.sellPermission ?? 0, user.sellApplyStatus ?? 0) }}
+                </el-tag>
+                <el-button
+                  v-if="canApplySell"
+                  size="small"
+                  style="margin-left: 12px"
+                  :loading="applyLoading.sell"
+                  @click="applySellerPermission('SELL')"
+                >申请出售权限</el-button>
+              </el-col>
+            </el-row>
+            <el-row style="margin-bottom: 16px" align="middle">
+              <el-col>
+                出租权限：
+                <el-tag :type="getStatusTagType(user.rentPermission ?? 0, user.rentApplyStatus ?? 0)">
+                  {{ getPermissionStatusText(user.rentPermission ?? 0, user.rentApplyStatus ?? 0) }}
+                </el-tag>
+                <el-button
+                  v-if="canApplyRent"
+                  size="small"
+                  style="margin-left: 12px"
+                  :loading="applyLoading.rent"
+                  @click="applySellerPermission('RENT')"
+                >申请出租权限</el-button>
+              </el-col>
+            </el-row>
           </el-card>
         </el-tab-pane>
         <el-tab-pane label="收藏攻略" name="second">
@@ -124,11 +161,22 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
+    <el-dialog v-model="balanceDialogVisible" title="调整余额" width="360px">
+      <el-form :model="balanceForm" label-width="90px">
+        <el-form-item label="余额(¥)">
+          <el-input-number v-model="balanceForm.balance" :min="0" :precision="2" :step="10" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="balanceDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="updatingBalance" @click="submitBalance">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { GET_ID } from "@/utils/token";
 import PrivateMessage from "@/components/PrivateMessage/index.vue";
 import Post from "@/components/Post/index.vue";
@@ -136,7 +184,9 @@ import MyComment from "@/components/MyComment/index.vue";
 import CommodityList from "@/components/CommodityList/index.vue";
 import {
   getUserVoByIdUsingGet,
-  updateMyUserUsingPost
+  updateMyUserUsingPost,
+  updateMyBalanceUsingPost,
+  applySellerUsingPost
 } from "@/api/userController";
 import { ElMessage, ElPagination } from "element-plus";
 import useUserStore from "@/store/modules/user";
@@ -166,7 +216,12 @@ const user = ref({
   userAvatar: "",
   userName: "",
   userProfile: "",
-  userRole: ""
+  userRole: "",
+  balance: 0,
+  sellPermission: 0,
+  rentPermission: 0,
+  sellApplyStatus: 0,
+  rentApplyStatus: 0
 });
 // 账号列表数据
 const commodityList = ref([]);
@@ -199,6 +254,45 @@ const favoritesQueryParams = ref({
   status: 1 // 1 表示正常收藏
 });
 const favoritesTotal = ref(0);
+const balanceDialogVisible = ref(false);
+const balanceForm = ref<{ balance: number }>({ balance: 0 });
+const updatingBalance = ref(false);
+const applyLoading = ref({ sell: false, rent: false });
+
+const permissionStatusMap: Record<number, string> = {
+  0: "未申请",
+  1: "审核中",
+  2: "已通过",
+  3: "已拒绝"
+};
+
+const getPermissionStatusText = (permission: number, status: number) => {
+  if (permission === 1) {
+    return "已开通";
+  }
+  return permissionStatusMap[status] ?? "未申请";
+};
+
+const getStatusTagType = (permission: number, status: number) => {
+  if (permission === 1) {
+    return "success";
+  }
+  if (status === 1) {
+    return "warning";
+  }
+  if (status === 3) {
+    return "danger";
+  }
+  return "info";
+};
+
+const canApplySell = computed(() => {
+  return (user.value.sellPermission ?? 0) !== 1 && user.value.sellApplyStatus !== 1;
+});
+
+const canApplyRent = computed(() => {
+  return (user.value.rentPermission ?? 0) !== 1 && user.value.rentApplyStatus !== 1;
+});
 
 // 加载收藏账号列表
 const loadCommodityFavoritesList = async () => {
@@ -220,6 +314,56 @@ const loadCommodityFavoritesList = async () => {
     }
   } catch (error) {
     ElMessage.error("获取收藏账号失败");
+  }
+};
+const openBalanceDialog = () => {
+  balanceForm.value.balance = Number(user.value.balance ?? 0);
+  balanceDialogVisible.value = true;
+};
+
+const submitBalance = async () => {
+  const value = Number(balanceForm.value.balance);
+  if (Number.isNaN(value) || value < 0) {
+    return ElMessage.error("请输入有效的余额");
+  }
+  try {
+    updatingBalance.value = true;
+    const res = await updateMyBalanceUsingPost({ balance: value });
+    if (res.code === 200) {
+      ElMessage.success("余额已更新");
+      balanceDialogVisible.value = false;
+      await getUserInformationById();
+    } else {
+      ElMessage.error(res.message || "更新失败");
+    }
+  } catch (error) {
+    ElMessage.error("更新失败");
+  } finally {
+    updatingBalance.value = false;
+  }
+};
+
+const applySellerPermission = async (type: "SELL" | "RENT") => {
+  const key = type === "SELL" ? "sell" : "rent";
+  if (type === "SELL" && !canApplySell.value) {
+    return ElMessage.warning("当前不可申请出售权限");
+  }
+  if (type === "RENT" && !canApplyRent.value) {
+    return ElMessage.warning("当前不可申请出租权限");
+  }
+  try {
+    applyLoading.value[key] = true;
+    const res = await applySellerUsingPost({ applyType: type });
+    if (res.code === 200) {
+      ElMessage.success("申请已提交，请等待审核");
+      await getUserInformationById();
+    } else {
+      ElMessage.error(res.message || "申请失败");
+    }
+  } catch (error: any) {
+    ElMessage.error(error?.message || "申请失败");
+  } finally {
+    applyLoading.value[key] = false;
   }
 };
 // 处理支付
@@ -291,6 +435,12 @@ const getUserInformationById = async () => {
   });
   if (result.code == 200) {
     user.value = result.data;
+    userStore.syncSellerInfo({
+      sellPermission: result.data.sellPermission,
+      rentPermission: result.data.rentPermission,
+      sellApplyStatus: result.data.sellApplyStatus,
+      rentApplyStatus: result.data.rentApplyStatus
+    });
   }
 };
 const startEditing = () => {

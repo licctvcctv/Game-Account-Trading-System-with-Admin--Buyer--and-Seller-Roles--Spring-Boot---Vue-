@@ -11,6 +11,7 @@
             <result property="commodityAvatar" column="commodityAvatar" jdbcType="VARCHAR"/>
             <result property="degree" column="degree" jdbcType="VARCHAR"/>
             <result property="commodityTypeId" column="commodityTypeId" jdbcType="BIGINT"/>
+            <result property="tradeType" column="tradeType" jdbcType="TINYINT"/>
             <result property="adminId" column="adminId" jdbcType="BIGINT"/>
             <result property="isListed" column="isListed" jdbcType="TINYINT"/>
             <result property="commodityInventory" column="commodityInventory" jdbcType="INTEGER"/>
@@ -24,7 +25,7 @@
 
     <sql id="Base_Column_List">
         id,commodityName,commodityDescription,
-        commodityAvatar,`degree`,commodityTypeId,
+        commodityAvatar,`degree`,commodityTypeId,tradeType,
         adminId,isListed,commodityInventory,
         price,viewNum,favourNum,
         createTime,updateTime,isDelete

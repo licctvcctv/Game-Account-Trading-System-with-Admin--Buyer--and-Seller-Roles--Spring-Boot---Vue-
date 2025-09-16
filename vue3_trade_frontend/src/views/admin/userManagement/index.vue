@@ -54,6 +54,52 @@
         prop="userProfile"
         :copyable="true"
       ></el-table-column>
+      <el-table-column label="出售权限" width="220">
+        <template #default="{ row }">
+          <el-tag :type="getStatusTagType(row.sellPermission, row.sellApplyStatus)">
+            {{ getPermissionStatusText(row.sellPermission, row.sellApplyStatus) }}
+          </el-tag>
+          <el-button
+            v-if="row.sellApplyStatus === 1"
+            size="small"
+            type="success"
+            style="margin-left: 8px"
+            :loading="row.__sellLoading === 'approve'"
+            @click="handlePermission(row, 'SELL', true)"
+          >通过</el-button>
+          <el-button
+            v-if="row.sellApplyStatus === 1"
+            size="small"
+            type="danger"
+            style="margin-left: 4px"
+            :loading="row.__sellLoading === 'reject'"
+            @click="handlePermission(row, 'SELL', false)"
+          >拒绝</el-button>
+        </template>
+      </el-table-column>
+      <el-table-column label="出租权限" width="220">
+        <template #default="{ row }">
+          <el-tag :type="getStatusTagType(row.rentPermission, row.rentApplyStatus)">
+            {{ getPermissionStatusText(row.rentPermission, row.rentApplyStatus) }}
+          </el-tag>
+          <el-button
+            v-if="row.rentApplyStatus === 1"
+            size="small"
+            type="success"
+            style="margin-left: 8px"
+            :loading="row.__rentLoading === 'approve'"
+            @click="handlePermission(row, 'RENT', true)"
+          >通过</el-button>
+          <el-button
+            v-if="row.rentApplyStatus === 1"
+            size="small"
+            type="danger"
+            style="margin-left: 4px"
+            :loading="row.__rentLoading === 'reject'"
+            @click="handlePermission(row, 'RENT', false)"
+          >拒绝</el-button>
+        </template>
+      </el-table-column>
       <el-table-column label="角色" prop="userRole">
         <template #default="{ row }">
           <el-select v-model="row.userRole" placeholder="选择角色" disabled>
@@ -241,6 +287,12 @@ const editForm = ref({
 });
 const editFormRef = ref<FormInstance>();
 const viewForm = ref();
+const permissionStatusMap: Record<number, string> = {
+  0: "未申请",
+  1: "审核中",
+  2: "已通过",
+  3: "已拒绝"
+};
 // 格式化时间
 const formatDate = (row, column, cellValue) => {
   return new Date(cellValue).toLocaleString();
@@ -263,7 +315,11 @@ const getUserList = async () => {
       ElMessage.error(res.msg);
       return;
     }
-    userList.value = res.data.records || [];
+    userList.value = (res.data.records || []).map((item: any) => ({
+      ...item,
+      __sellLoading: "",
+      __rentLoading: ""
+    }));
     pagination.value.total = parseInt(res.data.total) || 0;
   } catch (error: any) {
     ElMessage.error("获取用户列表失败，" + error.message);
@@ -304,6 +360,52 @@ const resetEditField = (formEl: FormInstance | undefined) => {
 const view = (row) => {
   viewForm.value = { ...row };
   viewDialogVisible.value = true;
+};
+
+const getPermissionStatusText = (permission?: number, status?: number) => {
+  if (permission === 1) {
+    return "已开通";
+  }
+  return permissionStatusMap[status ?? 0] || "未申请";
+};
+
+const getStatusTagType = (permission?: number, status?: number) => {
+  if (permission === 1) {
+    return "success";
+  }
+  if (status === 1) {
+    return "warning";
+  }
+  if (status === 3) {
+    return "danger";
+  }
+  return "info";
+};
+
+const handlePermission = async (row: any, type: "SELL" | "RENT", approve: boolean) => {
+  const loadingKey = type === "SELL" ? "__sellLoading" : "__rentLoading";
+  row[loadingKey] = approve ? "approve" : "reject";
+  try {
+    const payload: any = { id: row.id };
+    if (type === "SELL") {
+      payload.sellPermission = approve ? 1 : 0;
+      payload.sellApplyStatus = approve ? 2 : 3;
+    } else {
+      payload.rentPermission = approve ? 1 : 0;
+      payload.rentApplyStatus = approve ? 2 : 3;
+    }
+    const res = await updateUserUsingPost(payload);
+    if (res.code === 200) {
+      ElMessage.success(approve ? "已通过申请" : "已拒绝申请");
+      await getUserList();
+    } else {
+      ElMessage.error(res.message || "操作失败");
+    }
+  } catch (error: any) {
+    ElMessage.error(error?.message || "操作失败");
+  } finally {
+    row[loadingKey] = "";
+  }
 };
 const deleteUser = async (row) => {
   try {

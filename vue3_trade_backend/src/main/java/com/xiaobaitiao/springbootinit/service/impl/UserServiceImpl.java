@@ -259,6 +259,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String userName = userQueryRequest.getUserName();
         String userProfile = userQueryRequest.getUserProfile();
         String userRole = userQueryRequest.getUserRole();
+        Integer sellPermission = userQueryRequest.getSellPermission();
+        Integer rentPermission = userQueryRequest.getRentPermission();
+        Integer sellApplyStatus = userQueryRequest.getSellApplyStatus();
+        Integer rentApplyStatus = userQueryRequest.getRentApplyStatus();
         String sortField = userQueryRequest.getSortField();
         String sortOrder = userQueryRequest.getSortOrder();
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
@@ -266,6 +270,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(StringUtils.isNotBlank(unionId), "unionId", unionId);
         queryWrapper.eq(StringUtils.isNotBlank(mpOpenId), "mpOpenId", mpOpenId);
         queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
+        queryWrapper.eq(sellPermission != null, "sellPermission", sellPermission);
+        queryWrapper.eq(rentPermission != null, "rentPermission", rentPermission);
+        queryWrapper.eq(sellApplyStatus != null, "sellApplyStatus", sellApplyStatus);
+        queryWrapper.eq(rentApplyStatus != null, "rentApplyStatus", rentApplyStatus);
         queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
