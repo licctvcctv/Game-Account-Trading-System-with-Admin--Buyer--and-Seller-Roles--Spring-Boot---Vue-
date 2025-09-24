@@ -27,8 +27,17 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="price" label="价格(¥)" width="120" />
-          <el-table-column prop="commodityInventory" label="库存" width="90" />
+          <el-table-column label="价格" width="160">
+            <template #default="{ row }">
+              <span>{{ row.price }}</span>
+              <span v-if="row.tradeType === 2" class="price-unit"> / 小时</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="库存" width="90">
+            <template #default="{ row }">
+              {{ row.tradeType === 2 ? '-' : row.commodityInventory }}
+            </template>
+          </el-table-column>
           <el-table-column label="上架" width="120">
             <template #default="{ row }">
               <el-switch v-model="row.isListed" :active-value="1" :inactive-value="0" @change="toggleListed(row)" />
@@ -77,10 +86,10 @@
             <el-form-item label="账号简介">
               <el-input v-model="editForm.commodityDescription" type="textarea" :rows="3" />
             </el-form-item>
-            <el-form-item label="价格(¥)" prop="price">
+            <el-form-item :label="editPriceLabel" prop="price">
               <el-input v-model.number="editForm.price" />
             </el-form-item>
-            <el-form-item label="库存" prop="commodityInventory">
+            <el-form-item v-if="!editIsRental" label="库存" prop="commodityInventory">
               <el-input-number v-model="editForm.commodityInventory" :min="0" />
             </el-form-item>
             <el-form-item label="封面图">
@@ -132,6 +141,9 @@ const editForm = ref<any>({});
 const formRef = ref();
 const commodityTypeList = ref<any[]>([]);
 
+const editIsRental = computed(() => editForm.value?.tradeType === 2);
+const editPriceLabel = computed(() => (editIsRental.value ? "时价(¥/小时)" : "价格(¥)"));
+
 const allowPublish = computed(() => (userStore.sellPermission ?? 0) === 1 || (userStore.rentPermission ?? 0) === 1);
 
 const tradeTypeOptions = computed(() => {
@@ -154,10 +166,22 @@ const editableTradeTypeOptions = computed(() => {
   return opts;
 });
 
+const validateEditInventory = (_rule: any, value: any, callback: any) => {
+  if (editIsRental.value) {
+    callback();
+    return;
+  }
+  if (value === undefined || value === null || value <= 0) {
+    callback(new Error("请输入大于 0 的库存"));
+  } else {
+    callback();
+  }
+};
+
 const rules = {
   commodityName: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
   price: [{ required: true, message: "请输入价格", trigger: "blur" }],
-  commodityInventory: [{ required: true, message: "请输入库存", trigger: "blur" }],
+  commodityInventory: [{ validator: validateEditInventory, trigger: "blur" }],
   commodityTypeId: [{ required: true, message: "请选择分类", trigger: "change" }],
   tradeType: [{ required: true, message: "请选择交易类型", trigger: "change" }]
 };
@@ -193,6 +217,9 @@ const openEdit = (row: any) => {
   if (!editForm.value.tradeType && editableTradeTypeOptions.value.length > 0) {
     editForm.value.tradeType = editableTradeTypeOptions.value[0].value;
   }
+  if (editForm.value.tradeType === 2) {
+    editForm.value.commodityInventory = 0;
+  }
   editVisible.value = true;
 };
 
@@ -219,7 +246,10 @@ const saveEdit = async () => {
     if (!valid) return;
     try {
       saving.value = true;
-      const payload = { ...editForm.value };
+      const payload = {
+        ...editForm.value,
+        commodityInventory: editIsRental.value ? 0 : editForm.value.commodityInventory
+      };
       const res: any = await editCommodityUsingPost(payload);
       if (res.code === 200) {
         ElMessage.success("保存成功");
@@ -262,6 +292,15 @@ const initData = async () => {
   }
 };
 
+watch(
+  () => editForm.value?.tradeType,
+  (type) => {
+    if (type === 2) {
+      editForm.value.commodityInventory = 0;
+    }
+  }
+);
+
 onMounted(async () => {
   if (!allowPublish.value) {
     ElMessage.warning("请先申请出售或出租权限");
@@ -283,4 +322,5 @@ watch(allowPublish, async (val, oldVal) => {
 .sub { margin: 2px 0 0 0; color: #888; font-size: 12px; }
 .pager { margin-top: 12px; text-align: right; }
 .mb16 { margin-bottom: 16px; }
+.price-unit { margin-left: 4px; color: #909399; font-size: 12px; }
 </style>

@@ -60,21 +60,29 @@
             {{ getPermissionStatusText(row.sellPermission, row.sellApplyStatus) }}
           </el-tag>
           <el-button
-            v-if="row.sellApplyStatus === 1"
+            v-if="row.sellPermission === 1"
             size="small"
-            type="success"
+            type="warning"
             style="margin-left: 8px"
-            :loading="row.__sellLoading === 'approve'"
-            @click="handlePermission(row, 'SELL', true)"
-          >通过</el-button>
-          <el-button
-            v-if="row.sellApplyStatus === 1"
-            size="small"
-            type="danger"
-            style="margin-left: 4px"
-            :loading="row.__sellLoading === 'reject'"
-            @click="handlePermission(row, 'SELL', false)"
-          >拒绝</el-button>
+            :loading="row.__sellLoading === 'revoke'"
+            @click="handlePermission(row, 'SELL', 'revoke')"
+          >撤销</el-button>
+          <template v-else-if="row.sellApplyStatus === 1">
+            <el-button
+              size="small"
+              type="success"
+              style="margin-left: 8px"
+              :loading="row.__sellLoading === 'approve'"
+              @click="handlePermission(row, 'SELL', 'approve')"
+            >通过</el-button>
+            <el-button
+              size="small"
+              type="danger"
+              style="margin-left: 4px"
+              :loading="row.__sellLoading === 'reject'"
+              @click="handlePermission(row, 'SELL', 'reject')"
+            >拒绝</el-button>
+          </template>
         </template>
       </el-table-column>
       <el-table-column label="出租权限" width="220">
@@ -83,21 +91,29 @@
             {{ getPermissionStatusText(row.rentPermission, row.rentApplyStatus) }}
           </el-tag>
           <el-button
-            v-if="row.rentApplyStatus === 1"
+            v-if="row.rentPermission === 1"
             size="small"
-            type="success"
+            type="warning"
             style="margin-left: 8px"
-            :loading="row.__rentLoading === 'approve'"
-            @click="handlePermission(row, 'RENT', true)"
-          >通过</el-button>
-          <el-button
-            v-if="row.rentApplyStatus === 1"
-            size="small"
-            type="danger"
-            style="margin-left: 4px"
-            :loading="row.__rentLoading === 'reject'"
-            @click="handlePermission(row, 'RENT', false)"
-          >拒绝</el-button>
+            :loading="row.__rentLoading === 'revoke'"
+            @click="handlePermission(row, 'RENT', 'revoke')"
+          >撤销</el-button>
+          <template v-else-if="row.rentApplyStatus === 1">
+            <el-button
+              size="small"
+              type="success"
+              style="margin-left: 8px"
+              :loading="row.__rentLoading === 'approve'"
+              @click="handlePermission(row, 'RENT', 'approve')"
+            >通过</el-button>
+            <el-button
+              size="small"
+              type="danger"
+              style="margin-left: 4px"
+              :loading="row.__rentLoading === 'reject'"
+              @click="handlePermission(row, 'RENT', 'reject')"
+            >拒绝</el-button>
+          </template>
         </template>
       </el-table-column>
       <el-table-column label="角色" prop="userRole">
@@ -382,21 +398,48 @@ const getStatusTagType = (permission?: number, status?: number) => {
   return "info";
 };
 
-const handlePermission = async (row: any, type: "SELL" | "RENT", approve: boolean) => {
+type PermissionAction = "approve" | "reject" | "revoke";
+
+const handlePermission = async (
+  row: any,
+  type: "SELL" | "RENT",
+  action: PermissionAction
+) => {
   const loadingKey = type === "SELL" ? "__sellLoading" : "__rentLoading";
-  row[loadingKey] = approve ? "approve" : "reject";
+  row[loadingKey] = action;
   try {
     const payload: any = { id: row.id };
     if (type === "SELL") {
-      payload.sellPermission = approve ? 1 : 0;
-      payload.sellApplyStatus = approve ? 2 : 3;
+      if (action === "approve") {
+        payload.sellPermission = 1;
+        payload.sellApplyStatus = 2;
+      } else if (action === "reject") {
+        payload.sellPermission = 0;
+        payload.sellApplyStatus = 3;
+      } else {
+        payload.sellPermission = 0;
+        payload.sellApplyStatus = 0;
+      }
     } else {
-      payload.rentPermission = approve ? 1 : 0;
-      payload.rentApplyStatus = approve ? 2 : 3;
+      if (action === "approve") {
+        payload.rentPermission = 1;
+        payload.rentApplyStatus = 2;
+      } else if (action === "reject") {
+        payload.rentPermission = 0;
+        payload.rentApplyStatus = 3;
+      } else {
+        payload.rentPermission = 0;
+        payload.rentApplyStatus = 0;
+      }
     }
     const res = await updateUserUsingPost(payload);
     if (res.code === 200) {
-      ElMessage.success(approve ? "已通过申请" : "已拒绝申请");
+      const msgMap: Record<PermissionAction, string> = {
+        approve: "已通过申请",
+        reject: "已拒绝申请",
+        revoke: "已撤销权限"
+      };
+      ElMessage.success(msgMap[action]);
       await getUserList();
     } else {
       ElMessage.error(res.message || "操作失败");

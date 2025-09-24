@@ -15,9 +15,6 @@
 
       <!-- 状态信息 -->
       <div class="status-info" style="margin-top: 16px">
-        <el-tag type="info" style="margin-right: 8px">
-          新旧程度: {{ commodity.degree || "未知" }}
-        </el-tag>
         <el-tag type="success" style="margin-right: 8px">
           所属类别: {{ commodity.commodityTypeName || "-" }}
         </el-tag>
@@ -28,26 +25,53 @@
           v-if="commodity.isListed === 0"
           type="danger"
           style="margin-left: 12px"
-          >未上架
+        >
+          未上架
         </el-tag>
         <el-tag
           v-if="commodity.isListed === 1"
           type="success"
           style="margin-left: 12px"
-          >已上架
+        >
+          已上架
+        </el-tag>
+        <el-tag
+          v-if="isRental"
+          :type="isCurrentlyRented ? 'danger' : 'warning'"
+          style="margin-left: 12px"
+        >
+          {{ isCurrentlyRented ? "出租中" : "可租用" }}
         </el-tag>
       </div>
 
       <!-- 价格和库存 -->
-      <p style="font-size: 16px; color: #666; margin: 16px 0 0 0">
-        价格：{{ commodity.price }} 元 | 库存：{{
-          commodity.commodityInventory
-        }}
+      <p class="price-text">
+        {{ isRental
+          ? `时价：${commodity.price} 元/小时`
+          : `价格：${commodity.price} 元` }}
+        <template v-if="!isRental">
+          | 库存：{{ commodity.commodityInventory }}
+        </template>
+      </p>
+      <p
+        v-if="isRental && isCurrentlyRented && commodity.rentStartTime"
+        class="rent-period"
+      >
+        租用时间：{{ formatDateTime(commodity.rentStartTime) }} ~
+        {{ formatDateTime(commodity.rentEndTime) }}
       </p>
       <!-- 操作按钮 -->
       <div class="action-buttons" style="margin-top: 20px">
-        <el-button type="primary" @click="handleBuy" :icon="Coin"
-          >购买账号
+        <el-button
+          type="primary"
+          @click="handleBuy"
+          :icon="Coin"
+          :disabled="
+            (isRental && isCurrentlyRented) ||
+            (!isRental && (commodity.commodityInventory || 0) <= 0)
+          "
+        >
+          {{ isRental ? "租用该账号" : "购买账号" }}
         </el-button>
       </div>
 
@@ -147,15 +171,41 @@
     </el-dialog>
 
     <!-- 购买对话框 -->
-    <el-dialog v-model="buyDialogVisible" title="购买账号" width="500px">
+    <el-dialog
+      v-model="buyDialogVisible"
+      :title="isRental ? '租用账号' : '购买账号'"
+      width="500px"
+    >
       <el-form :model="buyForm" label-width="120px">
-        <el-form-item label="购买数量" prop="buyNumber">
+        <el-form-item v-if="!isRental" label="购买数量" prop="buyNumber">
           <el-input-number
             v-model="buyForm.buyNumber"
             :min="1"
             :max="commodity.commodityInventory"
             @change="updatePaymentAmount"
           />
+        </el-form-item>
+        <el-form-item v-else label="租用时长" prop="rentalDuration">
+          <div class="rental-duration">
+            <el-input-number
+              v-model="buyForm.rentalDuration"
+              :min="1"
+              @change="updatePaymentAmount"
+            />
+            <el-select
+              v-model="buyForm.rentalUnit"
+              class="rental-unit-select"
+              @change="updatePaymentAmount"
+            >
+              <el-option
+                v-for="option in rentalUnitOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+            <span class="unit-hint">({{ rentalUnitLabel }})</span>
+          </div>
         </el-form-item>
         <el-form-item label="支付金额" prop="paymentAmount">
           <el-input-number
@@ -183,7 +233,8 @@
 
 <script setup lang="ts">
 import { Coin } from "@element-plus/icons-vue";
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
+import dayjs from "dayjs";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import { Share, Star, StarFilled, View } from "@element-plus/icons-vue";
@@ -217,7 +268,12 @@ const commodity = ref({
   commodityDescription: "",
   viewNum: 0,
   favourNum: 0,
-  commodityTypeName: ""
+  commodityTypeName: "",
+  adminName: "",
+  tradeType: 1,
+  rentStatus: 0,
+  rentStartTime: "",
+  rentEndTime: ""
 });
 
 // 浏览量
@@ -242,23 +298,87 @@ const currentPageUrl = ref(window.location.href);
 const buyForm = ref({
   buyNumber: 1,
   paymentAmount: 0, // 支付金额初始为 0
-  remark: ""
+  remark: "",
+  rentalDuration: 1,
+  rentalUnit: "HOUR"
 });
-// 在现有代码中添加 watch 监听
+
+const rentalUnitOptions = [
+  { label: "小时", value: "HOUR" },
+  { label: "天", value: "DAY" }
+];
+
+const isRental = computed(() => commodity.value.tradeType === 2);
+const isCurrentlyRented = computed(() => {
+  if (!isRental.value) {
+    return false;
+  }
+  if (commodity.value.rentStatus !== 1) {
+    return false;
+  }
+  if (!commodity.value.rentEndTime) {
+    return false;
+  }
+  return dayjs(commodity.value.rentEndTime).isAfter(dayjs());
+});
+
+const rentalUnitLabel = computed(() =>
+  buyForm.value.rentalUnit === "DAY" ? "天" : "小时"
+);
+
+const formatDateTime = (time?: string) =>
+  time ? dayjs(time).format("YYYY-MM-DD HH:mm") : "";
+
+const recalcPaymentAmount = () => {
+  const price = Number(commodity.value.price || 0);
+  if (isRental.value) {
+    const duration = Math.max(1, buyForm.value.rentalDuration || 0);
+    const unitFactor = buyForm.value.rentalUnit === "DAY" ? 24 : 1;
+    buyForm.value.paymentAmount = Number((duration * unitFactor * price).toFixed(2));
+  } else {
+    const quantity = Math.max(1, buyForm.value.buyNumber || 1);
+    buyForm.value.paymentAmount = Number((quantity * price).toFixed(2));
+  }
+};
+
 watch(
   () => buyForm.value.buyNumber,
   (newVal) => {
-    // 计算精确金额（保留两位小数）
-    const total = (newVal * commodity.value.price).toFixed(2);
-    buyForm.value.paymentAmount = parseFloat(total);
-
-    // 可选：添加库存校验
-    if (newVal > commodity.value.commodityInventory) {
+    if (isRental.value) {
+      return;
+    }
+    const inventory = commodity.value.commodityInventory ?? 0;
+    if (newVal > inventory) {
       ElMessage.warning("数量超过库存！");
-      buyForm.value.buyNumber = commodity.value.commodityInventory;
+      buyForm.value.buyNumber = inventory > 0 ? inventory : 1;
+    }
+    recalcPaymentAmount();
+  }
+);
+
+watch(
+  () => [buyForm.value.rentalDuration, buyForm.value.rentalUnit],
+  () => {
+    if (isRental.value) {
+      recalcPaymentAmount();
     }
   }
 );
+
+watch(
+  () => commodity.value.price,
+  () => {
+    recalcPaymentAmount();
+  }
+);
+
+watch(isRental, () => {
+  if (isRental.value) {
+    buyForm.value.buyNumber = 1;
+  }
+  recalcPaymentAmount();
+});
+
 // 获取商品详情
 const fetchCommodityDetail = async () => {
   try {
@@ -268,8 +388,7 @@ const fetchCommodityDetail = async () => {
       viewCount.value = res.data.viewNum || 0;
       favourCount.value = res.data.favourNum || 0;
       // 初始化支付金额
-      buyForm.value.paymentAmount =
-        buyForm.value.buyNumber * commodity.value.price;
+      recalcPaymentAmount();
     } else {
       ElMessage.error("获取账号详情失败");
     }
@@ -280,7 +399,7 @@ const fetchCommodityDetail = async () => {
 
 // 更新支付金额
 const updatePaymentAmount = () => {
-  buyForm.value.paymentAmount = buyForm.value.buyNumber * commodity.value.price;
+  recalcPaymentAmount();
 };
 
 // 更新浏览量
@@ -381,36 +500,56 @@ const handleShare = () => {
 
 // 处理购买按钮点击事件
 const handleBuy = () => {
-  // 先检查库存是否充足
-  if (commodity.value.commodityInventory <= 0) {
-    return ElMessage.error({
-      message: "库存不足，无法完成购买",
-      duration: 1500
-    });
+  if (isRental.value) {
+    if (isCurrentlyRented.value) {
+      ElMessage.warning("该账号当前正在租用中，暂无法租用");
+      return;
+    }
+    buyForm.value.rentalDuration = 1;
+    buyForm.value.rentalUnit = "HOUR";
+  } else {
+    if ((commodity.value.commodityInventory || 0) <= 0) {
+      ElMessage.error({
+        message: "库存不足，无法完成购买",
+        duration: 1500
+      });
+      return;
+    }
+    buyForm.value.buyNumber = 1;
   }
+  buyForm.value.remark = "";
+  recalcPaymentAmount();
   buyDialogVisible.value = true;
 };
 
 // 提交购买请求
 const submitBuy = async () => {
   try {
-    const res = await buyCommodityUsingPost({
-      ...buyForm.value,
-      commodityId: commodityId
-    });
+    const payload: any = {
+      commodityId: commodityId,
+      remark: buyForm.value.remark,
+      paymentAmount: buyForm.value.paymentAmount
+    };
+    if (isRental.value) {
+      payload.rentalDuration = buyForm.value.rentalDuration;
+      payload.rentalUnit = buyForm.value.rentalUnit;
+    } else {
+      payload.buyNumber = buyForm.value.buyNumber;
+    }
+    const res = await buyCommodityUsingPost(payload);
     if (res.code === 200) {
       if (res.data.needPay) {
         ElMessage.info("订单已创建，余额不足，请尽快完成订单支付");
       } else {
-        ElMessage.success("购买成功");
+        ElMessage.success(isRental.value ? "租用成功" : "购买成功");
       }
       buyDialogVisible.value = false;
       await fetchCommodityDetail(); // 刷新账号信息
     } else {
-      ElMessage.error("购买失败");
+      ElMessage.error("操作失败");
     }
   } catch (error) {
-    ElMessage.error("购买失败");
+    ElMessage.error("操作失败");
   }
 };
 
@@ -445,8 +584,37 @@ onMounted(async () => {
     align-items: center;
   }
 
-  .tags {
-    margin-top: 16px;
+  .status-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .price-text {
+    font-size: 16px;
+    color: #666;
+    margin: 16px 0 0 0;
+  }
+
+  .rent-period {
+    margin: 8px 0 0 0;
+    font-size: 14px;
+    color: #f56c6c;
+  }
+
+  .rental-duration {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rental-unit-select {
+    width: 120px;
+  }
+
+  .unit-hint {
+    font-size: 12px;
+    color: #909399;
   }
 
   .icon-container {

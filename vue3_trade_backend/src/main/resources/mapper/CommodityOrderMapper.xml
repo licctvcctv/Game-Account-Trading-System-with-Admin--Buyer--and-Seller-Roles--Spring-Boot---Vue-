@@ -10,8 +10,13 @@
             <result property="commodityId" column="commodityId" jdbcType="BIGINT"/>
             <result property="remark" column="remark" jdbcType="VARCHAR"/>
             <result property="buyNumber" column="buyNumber" jdbcType="INTEGER"/>
+            <result property="rentalDuration" column="rentalDuration" jdbcType="INTEGER"/>
+            <result property="rentalUnit" column="rentalUnit" jdbcType="VARCHAR"/>
             <result property="paymentAmount" column="paymentAmount" jdbcType="DECIMAL"/>
+            <result property="tradeType" column="tradeType" jdbcType="TINYINT"/>
             <result property="payStatus" column="payStatus" jdbcType="TINYINT"/>
+            <result property="rentStartTime" column="rentStartTime" jdbcType="TIMESTAMP"/>
+            <result property="rentEndTime" column="rentEndTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
@@ -19,8 +24,10 @@
 
     <sql id="Base_Column_List">
         id,userId,commodityId,
-        remark,buyNumber,paymentAmount,
-        payStatus,createTime,updateTime,
+        remark,buyNumber,rentalDuration,
+        rentalUnit,paymentAmount,tradeType,
+        payStatus,rentStartTime,rentEndTime,
+        createTime,updateTime,
         isDelete
     </sql>
 </mapper>

@@ -15,32 +15,38 @@
 
       <!-- 评分项 -->
       <div v-for="item in listData" :key="item.id" class="score-item">
-        <!-- 用户信息 -->
-        <div class="user-info">
-          <el-avatar
-            :src="
-              item.userVO.userAvatar ||
-              'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92fc6724dpng.png'
-            "
-          />
-          <div class="user-detail">
-            <div class="username">{{ item.userVO.userName || "匿名用户" }}</div>
-            <div class="star-display">
-              <el-icon
-                v-for="star in 5"
-                :key="star"
-                :size="16"
-                :color="star <= item.score ? '#ffc107' : '#e4e5e9'"
-              >
-                <StarFilled />
-              </el-icon>
+        <div class="score-header">
+          <!-- 用户信息 -->
+          <div class="user-info">
+            <el-avatar
+              :src="
+                item.userVO.userAvatar ||
+                'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92fc6724dpng.png'
+              "
+            />
+            <div class="user-detail">
+              <div class="username">{{ item.userVO.userName || "匿名用户" }}</div>
+              <div class="star-display">
+                <el-icon
+                  v-for="star in 5"
+                  :key="star"
+                  :size="16"
+                  :color="star <= item.score ? '#ffc107' : '#e4e5e9'"
+                >
+                  <StarFilled />
+                </el-icon>
+              </div>
             </div>
+          </div>
+
+          <!-- 评分时间 -->
+          <div class="score-time">
+            {{ formatTime(item.createTime) }}
           </div>
         </div>
 
-        <!-- 评分时间 -->
-        <div class="score-time">
-          {{ formatTime(item.createTime) }}
+        <div class="score-comment" v-if="item.comment">
+          {{ item.comment }}
         </div>
       </div>
     </div>
@@ -157,13 +163,20 @@ onUnmounted(() => {
 
   .score-item {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    flex-direction: column;
+    gap: 8px;
     padding: 15px 0;
     border-bottom: 1px solid #f0f2f5;
 
     &:last-child {
       border-bottom: none;
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
     }
 
     .user-info {
@@ -183,6 +196,14 @@ onUnmounted(() => {
           gap: 2px;
         }
       }
+    }
+
+    .score-comment {
+      flex: 1;
+      margin: 8px 0;
+      font-size: 14px;
+      color: #606266;
+      line-height: 1.5;
     }
 
     .score-time {

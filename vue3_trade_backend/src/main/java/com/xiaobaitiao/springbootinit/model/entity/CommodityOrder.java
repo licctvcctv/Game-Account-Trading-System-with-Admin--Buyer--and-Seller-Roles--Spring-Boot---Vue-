@@ -37,9 +37,19 @@ public class CommodityOrder implements Serializable {
     private String remark;
 
     /**
-     * 购买数量
+     * 购买数量（出售订单使用）
      */
     private Integer buyNumber;
+
+    /**
+     * 租用时长（租用订单使用）
+     */
+    private Integer rentalDuration;
+
+    /**
+     * 租用时长单位（HOUR/DAY等）
+     */
+    private String rentalUnit;
 
     /**
      * 订单总支付金额
@@ -47,9 +57,26 @@ public class CommodityOrder implements Serializable {
     private BigDecimal paymentAmount;
 
     /**
+     * 订单对应交易类型：1-出售 2-出租
+     */
+    private Integer tradeType;
+
+    /**
      * 0-未支付 1-已支付
      */
     private Integer payStatus;
+
+    /**
+     * 租用开始时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentStartTime;
+
+    /**
+     * 租用结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentEndTime;
 
     /**
      * 创建时间

@@ -17,8 +17,8 @@ import java.util.List;
 /**
  * 商品评分表视图
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class CommodityScoreVO implements Serializable {
@@ -42,6 +42,11 @@ public class CommodityScoreVO implements Serializable {
      * 评分（0-5，星级评分）
      */
     private Integer score;
+
+    /**
+     * 用户评分评论
+     */
+    private String comment;
     /**
      * 关联查询用户
      */

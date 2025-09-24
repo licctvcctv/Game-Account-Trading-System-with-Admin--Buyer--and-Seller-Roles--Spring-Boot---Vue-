@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * 查询商品类别表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @EqualsAndHashCode(callSuper = true)
 @Data

@@ -33,8 +33,8 @@ import java.util.Map;
 /**
  * 商品订单表接口
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @RestController
 @RequestMapping("/commodityOrder")

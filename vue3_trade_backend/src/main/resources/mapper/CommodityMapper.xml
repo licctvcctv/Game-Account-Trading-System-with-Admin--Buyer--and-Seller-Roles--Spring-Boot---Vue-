@@ -18,6 +18,9 @@
             <result property="price" column="price" jdbcType="DECIMAL"/>
             <result property="viewNum" column="viewNum" jdbcType="INTEGER"/>
             <result property="favourNum" column="favourNum" jdbcType="INTEGER"/>
+            <result property="rentStatus" column="rentStatus" jdbcType="TINYINT"/>
+            <result property="rentStartTime" column="rentStartTime" jdbcType="TIMESTAMP"/>
+            <result property="rentEndTime" column="rentEndTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
@@ -28,6 +31,7 @@
         commodityAvatar,`degree`,commodityTypeId,tradeType,
         adminId,isListed,commodityInventory,
         price,viewNum,favourNum,
+        rentStatus,rentStartTime,rentEndTime,
         createTime,updateTime,isDelete
     </sql>
     <select id="selectByIdWithLock" resultType="com.xiaobaitiao.springbootinit.model.entity.Commodity">

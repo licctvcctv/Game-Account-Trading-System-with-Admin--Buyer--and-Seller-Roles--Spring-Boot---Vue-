@@ -33,8 +33,8 @@ import java.util.stream.Collectors;
 /**
  * 商品表服务实现
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Service
 @Slf4j
@@ -57,13 +57,22 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         String commodityName = commodity.getCommodityName();
         Integer commodityInventory = commodity.getCommodityInventory();
         Integer tradeType = commodity.getTradeType();
+        Integer rentStatus = commodity.getRentStatus();
+        if (tradeType == null) {
+            tradeType = 1;
+        }
         // 创建数据时，参数不能为空
         if (add) {
             ThrowUtils.throwIf(StringUtils.isBlank(commodityName), ErrorCode.PARAMS_ERROR);
-            ThrowUtils.throwIf(commodityInventory == null || commodityInventory <= 0, ErrorCode.PARAMS_ERROR);
+            if (tradeType != 2) {
+                ThrowUtils.throwIf(commodityInventory == null || commodityInventory <= 0, ErrorCode.PARAMS_ERROR);
+            }
         }
         if (tradeType != null) {
             ThrowUtils.throwIf(tradeType != 1 && tradeType != 2, ErrorCode.PARAMS_ERROR);
+        }
+        if (rentStatus != null) {
+            ThrowUtils.throwIf(rentStatus != 0 && rentStatus != 1, ErrorCode.PARAMS_ERROR);
         }
     }
 
@@ -125,6 +134,8 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
      */
     @Override
     public CommodityVO getCommodityVO(Commodity commodity, HttpServletRequest request) {
+        // 根据租用时间刷新租用状态
+        refreshRentalState(commodity);
         // 对象转封装类
         CommodityVO commodityVO = CommodityVO.objToVo(commodity);
 
@@ -167,6 +178,9 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
             return commodityVOPage;
         }
 
+        // 刷新租用状态
+        commodityList.forEach(this::refreshRentalState);
+
         // 收集所有 commodityTypeId
         Set<Long> commodityTypeIds = commodityList.stream()
                 .map(Commodity::getCommodityTypeId)
@@ -197,6 +211,32 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
 
         commodityVOPage.setRecords(commodityVOList);
         return commodityVOPage;
+    }
+
+    private void refreshRentalState(Commodity commodity) {
+        if (commodity == null) {
+            return;
+        }
+        Integer tradeType = commodity.getTradeType();
+        if (tradeType == null || tradeType != 2) {
+            return;
+        }
+        Integer rentStatus = commodity.getRentStatus();
+        Date rentEndTime = commodity.getRentEndTime();
+        if (rentStatus == null || rentStatus == 0) {
+            return;
+        }
+        if (rentEndTime == null || rentEndTime.before(new Date())) {
+            Commodity updateEntity = new Commodity();
+            updateEntity.setId(commodity.getId());
+            updateEntity.setRentStatus(0);
+            updateEntity.setRentStartTime(null);
+            updateEntity.setRentEndTime(null);
+            this.updateById(updateEntity);
+            commodity.setRentStatus(0);
+            commodity.setRentStartTime(null);
+            commodity.setRentEndTime(null);
+        }
     }
 
     @Override

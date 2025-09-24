@@ -7,8 +7,8 @@ import com.xiaobaitiao.springbootinit.model.entity.User;
 /**
  * 帖子点赞服务
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 public interface PostThumbService extends IService<PostThumb> {
 

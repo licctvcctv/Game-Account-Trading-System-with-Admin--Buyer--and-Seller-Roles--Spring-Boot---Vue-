@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * 商品订单表服务
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 public interface CommodityOrderService extends IService<CommodityOrder> {
 

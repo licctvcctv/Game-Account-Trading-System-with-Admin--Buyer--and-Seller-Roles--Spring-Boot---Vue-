@@ -31,8 +31,8 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 商品类别表接口
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @RestController
 @RequestMapping("/commodityType")

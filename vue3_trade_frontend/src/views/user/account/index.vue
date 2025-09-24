@@ -61,6 +61,32 @@
               </el-col>
             </el-row>
 
+            <el-row style="margin-bottom: 20px">
+              <el-col>
+                手机号：
+                <el-input v-model="user.userPhone" style="width: 240px" placeholder="请输入手机号" />
+              </el-col>
+            </el-row>
+
+            <el-row style="margin-bottom: 20px">
+              <el-col>
+                姓名：
+                <el-input v-model="user.realName" style="width: 240px" placeholder="请输入真实姓名" />
+              </el-col>
+            </el-row>
+
+            <el-row style="margin-bottom: 20px">
+              <el-col>
+                身份证号：
+                <el-input
+                  v-model="user.idCardNumber"
+                  style="width: 320px"
+                  placeholder="请输入身份证号"
+                  maxlength="18"
+                />
+              </el-col>
+            </el-row>
+
             <!--        用户简介-->
             <el-row style="margin-bottom: 20px">
               用户简介：
@@ -217,6 +243,9 @@ const user = ref({
   userName: "",
   userProfile: "",
   userRole: "",
+  userPhone: "",
+  realName: "",
+  idCardNumber: "",
   balance: 0,
   sellPermission: 0,
   rentPermission: 0,
@@ -412,7 +441,10 @@ const updateUserInfo = async () => {
   const res = await updateMyUserUsingPost({
     userAvatar: newUserAvatar.value || user.value.userAvatar,
     userName: user.value.userName,
-    userProfile: user.value.userProfile
+    userProfile: user.value.userProfile,
+    userPhone: user.value.userPhone,
+    realName: user.value.realName,
+    idCardNumber: user.value.idCardNumber
   });
   if (res.code !== 200) {
     return ElMessage.error({
@@ -435,6 +467,9 @@ const getUserInformationById = async () => {
   });
   if (result.code == 200) {
     user.value = result.data;
+    user.value.userPhone = result.data.userPhone ?? "";
+    user.value.realName = result.data.realName ?? "";
+    user.value.idCardNumber = result.data.idCardNumber ?? "";
     userStore.syncSellerInfo({
       sellPermission: result.data.sellPermission,
       rentPermission: result.data.rentPermission,

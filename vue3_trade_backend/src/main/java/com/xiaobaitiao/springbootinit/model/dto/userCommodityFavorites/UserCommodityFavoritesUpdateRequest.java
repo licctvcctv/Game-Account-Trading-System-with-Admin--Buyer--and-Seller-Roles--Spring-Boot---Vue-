@@ -8,8 +8,8 @@ import java.util.List;
 /**
  * 更新用户商品收藏表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class UserCommodityFavoritesUpdateRequest implements Serializable {

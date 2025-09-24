@@ -12,8 +12,8 @@ import org.springframework.beans.BeanUtils;
 /**
  * 帖子视图
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class PostVO implements Serializable {

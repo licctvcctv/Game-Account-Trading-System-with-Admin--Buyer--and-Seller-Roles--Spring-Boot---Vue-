@@ -36,6 +36,11 @@ public class CommodityScore implements Serializable {
     private Integer score;
 
     /**
+     * 评分附带评论
+     */
+    private String comment;
+
+    /**
      * 创建时间
 
      */

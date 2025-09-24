@@ -17,8 +17,8 @@ import java.util.List;
 /**
  * 公告视图
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class NoticeVO implements Serializable {

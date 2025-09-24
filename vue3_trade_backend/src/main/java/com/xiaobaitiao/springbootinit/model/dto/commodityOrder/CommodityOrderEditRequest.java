@@ -15,8 +15,8 @@ import java.util.List;
 /**
  * 编辑商品订单表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class CommodityOrderEditRequest implements Serializable {

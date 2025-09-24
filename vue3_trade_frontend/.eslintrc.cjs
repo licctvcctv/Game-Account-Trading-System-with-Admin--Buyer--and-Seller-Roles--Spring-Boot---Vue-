@@ -56,5 +56,6 @@ module.exports = {
         'vue/no-mutating-props': 'off', // 不允许组件 prop的改变
         'vue/attribute-hyphenation': 'off', // 对模板中的自定义组件强制执行属性命名样式
     },
-    ignorePatterns: ["node_modules/", "src/api"],
+        ignorePatterns: ["node_modules/", "src/api", "src/assets/**", "vue.config.js"],
+
 }

@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * 查询商品评分表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -36,6 +36,11 @@ public class CommodityScoreQueryRequest extends PageRequest implements Serializa
      * 评分（0-5，星级评分）
      */
     private Integer score;
+
+    /**
+     * 评论内容
+     */
+    private String comment;
 
     private static final long serialVersionUID = 1L;
 }

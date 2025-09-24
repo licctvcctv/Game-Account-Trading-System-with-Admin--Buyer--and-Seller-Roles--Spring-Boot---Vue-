@@ -82,6 +82,23 @@ public class Commodity implements Serializable {
     private Integer favourNum;
 
     /**
+     * 当前租用状态：0-可租用 1-租用中
+     */
+    private Integer rentStatus;
+
+    /**
+     * 最近一次租用开始时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentStartTime;
+
+    /**
+     * 最近一次租用结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentEndTime;
+
+    /**
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")

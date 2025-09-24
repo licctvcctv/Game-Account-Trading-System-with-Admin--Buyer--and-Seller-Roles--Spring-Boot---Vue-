@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 /**
  * 事件处理器
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  **/
 @Component
 public class EventHandler implements WxMpMessageHandler {

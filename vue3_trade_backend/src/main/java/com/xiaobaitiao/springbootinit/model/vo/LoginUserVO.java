@@ -35,6 +35,21 @@ public class LoginUserVO implements Serializable {
      * 用户角色：user/admin/ban
      */
     private String userRole;
+
+    /**
+     * 联系方式
+     */
+    private String userPhone;
+
+    /**
+     * 用户实名
+     */
+    private String realName;
+
+    /**
+     * 身份证号
+     */
+    private String idCardNumber;
     /**
      * 用户余额
      */

@@ -17,6 +17,7 @@ import com.xiaobaitiao.springbootinit.service.UserService;
 import com.xiaobaitiao.springbootinit.utils.SqlUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -29,8 +30,8 @@ import java.util.stream.Collectors;
 /**
  * 商品评分表服务实现
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Service
 @Slf4j
@@ -52,10 +53,15 @@ public class CommodityScoreServiceImpl extends ServiceImpl<CommodityScoreMapper,
         // todo 从对象中取值
         Long commodityId = commodityScore.getCommodityId();
         Integer score = commodityScore.getScore();
+        String comment = commodityScore.getComment();
         // 创建数据时，参数不能为空
         if (add) {
-            ThrowUtils.throwIf(commodityId == null || commodityId <=0 , ErrorCode.PARAMS_ERROR);
-            ThrowUtils.throwIf(score == null || score <0 , ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(commodityId == null || commodityId <= 0, ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(score == null || score < 0 || score > 5, ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(StringUtils.isBlank(comment), ErrorCode.PARAMS_ERROR);
+        }
+        if (StringUtils.isNotBlank(comment)) {
+            ThrowUtils.throwIf(comment.length() > 500, ErrorCode.PARAMS_ERROR, "评论长度不能超过500字");
         }
 
     }
@@ -77,6 +83,7 @@ public class CommodityScoreServiceImpl extends ServiceImpl<CommodityScoreMapper,
         Long commodityId = commodityScoreQueryRequest.getCommodityId();
         Long userId = commodityScoreQueryRequest.getUserId();
         Integer score = commodityScoreQueryRequest.getScore();
+        String comment = commodityScoreQueryRequest.getComment();
         String sortField = commodityScoreQueryRequest.getSortField();
         String sortOrder = commodityScoreQueryRequest.getSortOrder();
         // 精确查询
@@ -84,6 +91,7 @@ public class CommodityScoreServiceImpl extends ServiceImpl<CommodityScoreMapper,
         queryWrapper.eq(ObjectUtils.isNotEmpty(score), "score", score);
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
+        queryWrapper.like(StringUtils.isNotBlank(comment), "comment", comment);
         // 排序规则
         queryWrapper.orderBy(SqlUtils.validSortField(sortField),
                 sortOrder.equals(CommonConstant.SORT_ORDER_ASC),

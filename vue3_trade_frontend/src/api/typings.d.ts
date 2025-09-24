@@ -394,6 +394,8 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
   };
 
   type checkUsingGETParams = {
@@ -480,6 +482,9 @@ declare namespace API {
     isDelete?: number;
     isListed?: number;
     price?: number;
+    rentEndTime?: string;
+    rentStartTime?: string;
+    rentStatus?: number;
     updateTime?: string;
     viewNum?: number;
   };
@@ -524,6 +529,11 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
+    rentEndTime?: string;
+    rentStartTime?: string;
+    tradeType?: number;
     updateTime?: string;
     userId?: number;
   };
@@ -534,6 +544,11 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
+    rentEndTime?: string;
+    rentStartTime?: string;
+    tradeType?: number;
     userId?: number;
   };
 
@@ -552,8 +567,11 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
     sortField?: string;
     sortOrder?: string;
+    tradeType?: number;
     userId?: number;
     userName?: string;
     userPhone?: string;
@@ -566,6 +584,9 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
+    tradeType?: number;
     userId?: number;
   };
 
@@ -579,6 +600,11 @@ declare namespace API {
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
+    rentalDuration?: number;
+    rentalUnit?: string;
+    rentEndTime?: string;
+    rentStartTime?: string;
+    tradeType?: number;
     updateTime?: string;
     userId?: number;
     userName?: string;
@@ -605,6 +631,7 @@ declare namespace API {
   };
 
   type CommodityScore = {
+    comment?: string;
     commodityId?: number;
     createTime?: string;
     id?: number;
@@ -615,12 +642,14 @@ declare namespace API {
   };
 
   type CommodityScoreAddRequest = {
+    comment?: string;
     commodityId?: number;
     score?: number;
     userId?: number;
   };
 
   type CommodityScoreEditRequest = {
+    comment?: string;
     commodityId?: number;
     id?: number;
     score?: number;
@@ -628,6 +657,7 @@ declare namespace API {
   };
 
   type CommodityScoreQueryRequest = {
+    comment?: string;
     commodityId?: number;
     current?: number;
     id?: number;
@@ -639,6 +669,7 @@ declare namespace API {
   };
 
   type CommodityScoreUpdateRequest = {
+    comment?: string;
     commodityId?: number;
     id?: number;
     score?: number;
@@ -646,6 +677,7 @@ declare namespace API {
   };
 
   type CommodityScoreVO = {
+    comment?: string;
     commodityId?: number;
     createTime?: string;
     id?: number;
@@ -725,6 +757,9 @@ declare namespace API {
     id?: number;
     isListed?: number;
     price?: number;
+    rentEndTime?: string;
+    rentStartTime?: string;
+    rentStatus?: number;
     updateTime?: string;
     viewNum?: number;
   };
@@ -819,15 +854,18 @@ declare namespace API {
     balance?: number;
     createTime?: string;
     id?: number;
+    idCardNumber?: string;
+    rentApplyStatus?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    sellPermission?: number;
     updateTime?: string;
     userAvatar?: string;
     userName?: string;
+    userPhone?: string;
     userProfile?: string;
     userRole?: string;
-    sellPermission?: number;
-    rentPermission?: number;
-    sellApplyStatus?: number;
-    rentApplyStatus?: number;
+    realName?: string;
   };
 
   type MapStringObject_ = true;
@@ -1370,8 +1408,10 @@ declare namespace API {
     createTime?: string;
     editTime?: string;
     id?: number;
+    idCardNumber?: string;
     isDelete?: number;
     mpOpenId?: string;
+    realName?: string;
     unionId?: string;
     updateTime?: string;
     userAccount?: string;
@@ -1528,12 +1568,15 @@ declare namespace API {
     balance?: number;
     current?: number;
     id?: number;
+    idCardNumber?: string;
     mpOpenId?: string;
     pageSize?: number;
+    realName?: string;
     sortField?: string;
     sortOrder?: string;
     unionId?: string;
     userName?: string;
+    userPhone?: string;
     userProfile?: string;
     userRole?: string;
     sellPermission?: number;
@@ -1544,13 +1587,19 @@ declare namespace API {
 
   type UserRegisterRequest = {
     checkPassword?: string;
+    idCardNumber?: string;
+    realName?: string;
     userAccount?: string;
     userPassword?: string;
+    userPhone?: string;
   };
 
   type UserUpdateMyRequest = {
+    idCardNumber?: string;
+    realName?: string;
     userAvatar?: string;
     userName?: string;
+    userPhone?: string;
     userProfile?: string;
   };
 
@@ -1566,14 +1615,17 @@ declare namespace API {
     aiRemainNumber?: number;
     balance?: number;
     id?: number;
-    userAvatar?: string;
-    userName?: string;
-    userProfile?: string;
-    userRole?: string;
-    sellPermission?: number;
+    idCardNumber?: string;
+    realName?: string;
+    rentApplyStatus?: number;
     rentPermission?: number;
     sellApplyStatus?: number;
-    rentApplyStatus?: number;
+    sellPermission?: number;
+    userAvatar?: string;
+    userName?: string;
+    userPhone?: string;
+    userProfile?: string;
+    userRole?: string;
   };
 
   type UserVO = {
@@ -1581,14 +1633,16 @@ declare namespace API {
     balance?: number;
     createTime?: string;
     id?: number;
+    idCardNumber?: string;
+    rentApplyStatus?: number;
+    rentPermission?: number;
+    sellApplyStatus?: number;
+    sellPermission?: number;
     userAvatar?: string;
     userName?: string;
     userPhone?: string;
     userProfile?: string;
     userRole?: string;
-    sellPermission?: number;
-    rentPermission?: number;
-    sellApplyStatus?: number;
-    rentApplyStatus?: number;
+    realName?: string;
   };
 }

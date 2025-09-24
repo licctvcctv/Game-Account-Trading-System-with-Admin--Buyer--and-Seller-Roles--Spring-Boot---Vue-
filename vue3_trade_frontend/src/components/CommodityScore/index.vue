@@ -19,7 +19,20 @@
           <StarFilled />
         </el-icon>
       </div>
-      <p v-if="hasRated" class="rated-text">您已评分：{{ currentRating }} 分</p>
+      <div v-if="!hasRated" class="comment-input">
+        <el-input
+          v-model="commentText"
+          type="textarea"
+          :rows="3"
+          maxlength="500"
+          show-word-limit
+          placeholder="请填写评分理由，最多 500 字"
+        />
+      </div>
+      <p v-else class="rated-text">您已评分：{{ currentRating }} 分</p>
+      <p v-if="hasRated && existingComment" class="existing-comment">
+        我的评论：{{ existingComment }}
+      </p>
     </div>
 
     <!-- 右侧平均分区域 -->
@@ -54,6 +67,10 @@ const hoverRating = ref(0);
 const averageRating = ref(0);
 // 用户是否已评分
 const hasRated = ref(false);
+// 评论内容
+const commentText = ref("");
+// 已有评论
+const existingComment = ref("");
 
 // 获取当前用户 ID
 const userId = GET_ID();
@@ -85,9 +102,12 @@ const checkUserRating = async () => {
       // 用户已评分
       hasRated.value = true;
       currentRating.value = res.data.records[0].score;
+      existingComment.value = res.data.records[0].comment || "";
     } else {
       // 用户未评分
       hasRated.value = false;
+      existingComment.value = "";
+      commentText.value = "";
     }
   } catch (error) {
     ElMessage.error("检查用户评分失败");
@@ -100,14 +120,26 @@ const handleRating = async (rating: number) => {
     ElMessage.warning("您已评分，不可重复评分");
     return;
   }
+  const comment = commentText.value.trim();
+  if (!comment) {
+    ElMessage.warning("请先填写评论，再提交评分");
+    return;
+  }
+  if (comment.length > 500) {
+    ElMessage.warning("评论内容不能超过 500 字");
+    return;
+  }
   try {
     const res = await addCommodityScoreUsingPost({
       commodityId: commodityId,
-      score: rating
+      score: rating,
+      comment
     });
     if (res.code === 200) {
       currentRating.value = rating;
       hasRated.value = true;
+      existingComment.value = comment;
+      commentText.value = "";
       ElMessage.success("评分成功");
       // 重新获取平均评分
       await fetchAverageScore();
@@ -142,7 +174,18 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  width: 100%;
+}
+
+.comment-input {
+  width: 100%;
+}
+
+.existing-comment {
+  margin: 0;
+  font-size: 14px;
+  color: #409eff;
 }
 
 .rating-text {

@@ -43,6 +43,25 @@
               show-password
             ></el-input>
           </el-form-item>
+          <el-form-item prop="userPhone">
+            <el-input
+              placeholder="请输入您的手机号"
+              v-model="registerForm.userPhone"
+            ></el-input>
+          </el-form-item>
+          <el-form-item prop="realName">
+            <el-input
+              placeholder="请输入您的真实姓名"
+              v-model="registerForm.realName"
+            ></el-input>
+          </el-form-item>
+          <el-form-item prop="idCardNumber">
+            <el-input
+              placeholder="请输入您的身份证号"
+              v-model="registerForm.idCardNumber"
+              maxlength="18"
+            ></el-input>
+          </el-form-item>
           <el-form-item>
             <el-button
               :loading="loading"
@@ -82,7 +101,10 @@ import { userRegisterUsingPost } from "@/api/userController";
 let registerForm = reactive({
   userAccount: "",
   userPassword: "",
-  checkPassword: ""
+  checkPassword: "",
+  userPhone: "",
+  realName: "",
+  idCardNumber: ""
 });
 
 // 获取registerForms组件
@@ -96,32 +118,42 @@ let $router = useRouter();
 // let userStore = userUserStore();
 //登录按钮的回调
 const register = async () => {
-  // 保证全部表单相校验通过再发请求
-  const valid = registerForms.value.validate();
-  if (!valid) {
+  const formRef = registerForms.value;
+  if (!formRef) return;
+  try {
+    await formRef.validate();
+  } catch (error) {
     ElMessage({
       type: "error",
-      message: "表单参数不合法",
+      message: "请检查表单输入是否正确",
       duration: 1000
     });
+    return;
   }
 
-  // 那么开始注册
-  let result: any = await userRegisterUsingPost(registerForm);
-  if (result.code == 200) {
-    ElMessage.success({
-      message: "注册用户成功",
-      duration: 1500
-    });
-    // 注册成功，跳转到登录页面
-    $router.push("/login");
-  } else {
+  try {
+    loading.value = true;
+    const result: any = await userRegisterUsingPost(registerForm);
+    if (result.code == 200) {
+      ElMessage.success({
+        message: "注册用户成功",
+        duration: 1500
+      });
+      $router.push("/login");
+    } else {
+      ElMessage.error({
+        message: result.message || "注册失败",
+        duration: 1500
+      });
+    }
+  } catch (error: any) {
     ElMessage.error({
-      message: result.message,
+      message: error?.message || "注册失败",
       duration: 1500
     });
+  } finally {
+    loading.value = false;
   }
-  // console.log(result);
 };
 // 返回登录按钮的回调
 const backToLogin = () => {
@@ -144,13 +176,48 @@ const validatorPassword = (_rule: any, value: any, callback: any) => {
 const validatorCheckPassword = (_rule: any, value: any, callback: any) => {
   if (registerForm.userPassword != value) {
     callback(new Error("两次输入的密码不一致"));
+  } else {
+    callback();
+  }
+};
+const validatorPhone = (_rule: any, value: any, callback: any) => {
+  if (/^1\d{10}$/.test(value)) {
+    callback();
+  } else {
+    callback(new Error("请输入11位手机号"));
+  }
+};
+const validatorRealName = (_rule: any, value: any, callback: any) => {
+  if (value && value.length >= 2 && value.length <= 30) {
+    callback();
+  } else {
+    callback(new Error("姓名长度应在2-30个字符之间"));
+  }
+};
+const validatorIdCard = (_rule: any, value: any, callback: any) => {
+  if (/^(\d{15}|\d{17}[\dXx])$/.test(value)) {
+    callback();
+  } else {
+    callback(new Error("请输入有效的身份证号"));
   }
 };
 // 定义表单校验参数
 const rules = {
-  userAccount: [{ trigger: "change", validator: validatorUserName }],
-  userPassword: [{ trigger: "change", validator: validatorPassword }],
-  checkPassword: [{ trigger: "change", validator: validatorCheckPassword }]
+  userAccount: [{ trigger: "blur", validator: validatorUserName }],
+  userPassword: [{ trigger: "blur", validator: validatorPassword }],
+  checkPassword: [{ trigger: "blur", validator: validatorCheckPassword }],
+  userPhone: [
+    { required: true, message: "请输入手机号", trigger: "blur" },
+    { validator: validatorPhone, trigger: "blur" }
+  ],
+  realName: [
+    { required: true, message: "请输入真实姓名", trigger: "blur" },
+    { validator: validatorRealName, trigger: "blur" }
+  ],
+  idCardNumber: [
+    { required: true, message: "请输入身份证号", trigger: "blur" },
+    { validator: validatorIdCard, trigger: "blur" }
+  ]
 };
 </script>
 <style scoped lang="scss">

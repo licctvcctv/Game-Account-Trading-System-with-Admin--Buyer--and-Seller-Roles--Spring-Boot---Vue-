@@ -8,8 +8,8 @@ import java.lang.annotation.Target;
 /**
  * 权限校验
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

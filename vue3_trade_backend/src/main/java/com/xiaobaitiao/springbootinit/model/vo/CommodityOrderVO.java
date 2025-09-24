@@ -18,8 +18,8 @@ import java.util.List;
 /**
  * 商品订单表视图
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class CommodityOrderVO implements Serializable {
@@ -61,14 +61,41 @@ public class CommodityOrderVO implements Serializable {
     private Integer buyNumber;
 
     /**
+     * 租用时长（租赁订单使用）
+     */
+    private Integer rentalDuration;
+
+    /**
+     * 租用时长单位
+     */
+    private String rentalUnit;
+
+    /**
      * 订单总支付金额
      */
     private BigDecimal paymentAmount;
 
     /**
+     * 订单对应交易类型：1-出售 2-出租
+     */
+    private Integer tradeType;
+
+    /**
      * 0-未支付 1-已支付
      */
     private Integer payStatus;
+
+    /**
+     * 租用开始时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentStartTime;
+
+    /**
+     * 租用结束时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date rentEndTime;
 
     /**
      * 创建时间

@@ -26,6 +26,7 @@ import org.springframework.util.DigestUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.xiaobaitiao.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
@@ -33,8 +34,8 @@ import static com.xiaobaitiao.springbootinit.constant.UserConstant.USER_LOGIN_ST
 /**
  * 用户服务实现
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Service
 @Slf4j
@@ -44,11 +45,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      * 盐值，混淆密码
      */
     public static final String SALT = "xiaobaitiao";
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1\\d{10}$");
+    private static final Pattern ID_CARD_PATTERN = Pattern.compile("^(\\d{15}|\\d{17}[\\dXx])$");
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
-        // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+    public long userRegister(String userAccount, String userPassword, String checkPassword, String userPhone, String realName, String idCardNumber) {
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userPhone, realName, idCardNumber)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
         if (userAccount.length() < 4) {
@@ -57,24 +59,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userPassword.length() < 8 || checkPassword.length() < 8) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
         }
-        // 密码和校验密码相同
         if (!userPassword.equals(checkPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
         }
+        if (!PHONE_PATTERN.matcher(userPhone).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号格式错误");
+        }
+        if (realName.length() < 2 || realName.length() > 30) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "姓名长度应在2-30个字符内");
+        }
+        if (!ID_CARD_PATTERN.matcher(idCardNumber).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号码格式错误");
+        }
         synchronized (userAccount.intern()) {
-            // 账户不能重复
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("userAccount", userAccount);
             long count = this.baseMapper.selectCount(queryWrapper);
             if (count > 0) {
                 throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
             }
-            // 2. 加密
+            QueryWrapper<User> phoneWrapper = new QueryWrapper<>();
+            phoneWrapper.eq("userPhone", userPhone);
+            if (this.baseMapper.selectCount(phoneWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号已注册");
+            }
+            QueryWrapper<User> idWrapper = new QueryWrapper<>();
+            idWrapper.eq("idCardNumber", idCardNumber);
+            if (this.baseMapper.selectCount(idWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号已注册");
+            }
             String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 插入数据
             User user = new User();
             user.setUserAccount(userAccount);
             user.setUserPassword(encryptPassword);
+            user.setUserPhone(userPhone);
+            user.setRealName(realName);
+            user.setIdCardNumber(idCardNumber.toUpperCase());
             boolean saveResult = this.save(user);
             if (!saveResult) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
@@ -258,6 +278,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String mpOpenId = userQueryRequest.getMpOpenId();
         String userName = userQueryRequest.getUserName();
         String userProfile = userQueryRequest.getUserProfile();
+        String userPhone = userQueryRequest.getUserPhone();
+        String realName = userQueryRequest.getRealName();
+        String idCardNumber = userQueryRequest.getIdCardNumber();
         String userRole = userQueryRequest.getUserRole();
         Integer sellPermission = userQueryRequest.getSellPermission();
         Integer rentPermission = userQueryRequest.getRentPermission();
@@ -275,6 +298,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         queryWrapper.eq(sellApplyStatus != null, "sellApplyStatus", sellApplyStatus);
         queryWrapper.eq(rentApplyStatus != null, "rentApplyStatus", rentApplyStatus);
         queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
+        queryWrapper.eq(StringUtils.isNotBlank(userPhone), "userPhone", userPhone);
+        queryWrapper.like(StringUtils.isNotBlank(realName), "realName", realName);
+        queryWrapper.eq(StringUtils.isNotBlank(idCardNumber), "idCardNumber", idCardNumber);
         queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
         queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
                 sortField);

@@ -1,5 +1,6 @@
 package com.xiaobaitiao.springbootinit.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xiaobaitiao.springbootinit.annotation.AuthCheck;
 import com.xiaobaitiao.springbootinit.common.BaseResponse;
@@ -19,6 +20,7 @@ import com.xiaobaitiao.springbootinit.service.UserService;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Pattern;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -41,6 +43,9 @@ import static com.xiaobaitiao.springbootinit.service.impl.UserServiceImpl.SALT;
 @RequestMapping("/user")
 @Slf4j
 public class UserController {
+
+    private static final Pattern PHONE_PATTERN = Pattern.compile("^1\\d{10}$");
+    private static final Pattern ID_CARD_PATTERN = Pattern.compile("^(\\d{15}|\\d{17}[\\dXx])$");
 
     @Resource
     private UserService userService;
@@ -81,10 +86,13 @@ public class UserController {
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+        String userPhone = userRegisterRequest.getUserPhone();
+        String realName = userRegisterRequest.getRealName();
+        String idCardNumber = userRegisterRequest.getIdCardNumber();
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, userPhone, realName, idCardNumber)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword, userPhone, realName, idCardNumber);
         return ResultUtils.success(result);
     }
 
@@ -227,11 +235,47 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
-        if (userUpdateRequest.getSellPermission() != null && userUpdateRequest.getSellPermission() == 1) {
-            user.setSellApplyStatus(2);
+        if (StringUtils.isNotBlank(user.getUserPhone()) && !PHONE_PATTERN.matcher(user.getUserPhone()).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号格式错误");
         }
-        if (userUpdateRequest.getRentPermission() != null && userUpdateRequest.getRentPermission() == 1) {
-            user.setRentApplyStatus(2);
+        if (StringUtils.isNotBlank(user.getRealName())) {
+            if (user.getRealName().length() < 2 || user.getRealName().length() > 30) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "姓名长度应在2-30个字符内");
+            }
+        }
+        if (StringUtils.isNotBlank(user.getIdCardNumber())) {
+            if (!ID_CARD_PATTERN.matcher(user.getIdCardNumber()).matches()) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号码格式错误");
+            }
+            user.setIdCardNumber(user.getIdCardNumber().toUpperCase());
+        }
+        if (StringUtils.isNotBlank(user.getUserPhone())) {
+            QueryWrapper<User> phoneWrapper = new QueryWrapper<>();
+            phoneWrapper.eq("userPhone", user.getUserPhone()).ne("id", user.getId());
+            if (userService.count(phoneWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号已被使用");
+            }
+        }
+        if (StringUtils.isNotBlank(user.getIdCardNumber())) {
+            QueryWrapper<User> idWrapper = new QueryWrapper<>();
+            idWrapper.eq("idCardNumber", user.getIdCardNumber()).ne("id", user.getId());
+            if (userService.count(idWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号已被使用");
+            }
+        }
+        if (userUpdateRequest.getSellPermission() != null) {
+            if (userUpdateRequest.getSellPermission() == 1) {
+                user.setSellApplyStatus(2);
+            } else if (userUpdateRequest.getSellApplyStatus() == null) {
+                user.setSellApplyStatus(0);
+            }
+        }
+        if (userUpdateRequest.getRentPermission() != null) {
+            if (userUpdateRequest.getRentPermission() == 1) {
+                user.setRentApplyStatus(2);
+            } else if (userUpdateRequest.getRentApplyStatus() == null) {
+                user.setRentApplyStatus(0);
+            }
         }
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -329,11 +373,61 @@ public class UserController {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User loginUser = userService.getLoginUser(request);
+        String phone = userUpdateMyRequest.getUserPhone();
+        String realName = userUpdateMyRequest.getRealName();
+        String idCardNumber = userUpdateMyRequest.getIdCardNumber();
+        if (StringUtils.isNotBlank(phone) && !PHONE_PATTERN.matcher(phone).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号格式错误");
+        }
+        if (StringUtils.isNotBlank(realName)) {
+            if (realName.length() < 2 || realName.length() > 30) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "姓名长度应在2-30个字符内");
+            }
+        }
+        if (StringUtils.isNotBlank(idCardNumber) && !ID_CARD_PATTERN.matcher(idCardNumber).matches()) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号码格式错误");
+        }
+        if (StringUtils.isNotBlank(phone) && !phone.equals(loginUser.getUserPhone())) {
+            QueryWrapper<User> phoneWrapper = new QueryWrapper<>();
+            phoneWrapper.eq("userPhone", phone).ne("id", loginUser.getId());
+            if (userService.count(phoneWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "手机号已被使用");
+            }
+        }
+        if (StringUtils.isNotBlank(idCardNumber) && !idCardNumber.equalsIgnoreCase(StringUtils.defaultString(loginUser.getIdCardNumber()))) {
+            QueryWrapper<User> idWrapper = new QueryWrapper<>();
+            idWrapper.eq("idCardNumber", idCardNumber.toUpperCase()).ne("id", loginUser.getId());
+            if (userService.count(idWrapper) > 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号已被使用");
+            }
+        }
         User user = new User();
         BeanUtils.copyProperties(userUpdateMyRequest, user);
+        if (StringUtils.isNotBlank(idCardNumber)) {
+            user.setIdCardNumber(idCardNumber.toUpperCase());
+        }
         user.setId(loginUser.getId());
         boolean result = userService.updateById(user);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+        if (StringUtils.isNotBlank(user.getUserName())) {
+            loginUser.setUserName(user.getUserName());
+        }
+        if (StringUtils.isNotBlank(user.getUserAvatar())) {
+            loginUser.setUserAvatar(user.getUserAvatar());
+        }
+        if (StringUtils.isNotBlank(phone)) {
+            loginUser.setUserPhone(phone);
+        }
+        if (StringUtils.isNotBlank(realName)) {
+            loginUser.setRealName(realName);
+        }
+        if (StringUtils.isNotBlank(idCardNumber)) {
+            loginUser.setIdCardNumber(idCardNumber.toUpperCase());
+        }
+        if (StringUtils.isNotBlank(user.getUserProfile())) {
+            loginUser.setUserProfile(user.getUserProfile());
+        }
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUser);
         return ResultUtils.success(true);
     }
 

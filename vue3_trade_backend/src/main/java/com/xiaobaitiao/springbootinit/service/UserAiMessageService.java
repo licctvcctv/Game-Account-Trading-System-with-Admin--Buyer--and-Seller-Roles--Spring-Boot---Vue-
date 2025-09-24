@@ -12,8 +12,8 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 用户对话表服务
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 public interface UserAiMessageService extends IService<UserAiMessage> {
 

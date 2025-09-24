@@ -14,8 +14,8 @@ import me.chanjar.weixin.common.bean.WxOAuth2UserInfo;
 /**
  * 用户服务
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 public interface UserService extends IService<User> {
 
@@ -25,9 +25,12 @@ public interface UserService extends IService<User> {
      * @param userAccount   用户账户
      * @param userPassword  用户密码
      * @param checkPassword 校验密码
+     * @param userPhone     手机号
+     * @param realName      真实姓名
+     * @param idCardNumber  身份证号
      * @return 新用户 id
      */
-    long userRegister(String userAccount, String userPassword, String checkPassword);
+    long userRegister(String userAccount, String userPassword, String checkPassword, String userPhone, String realName, String idCardNumber);
 
     /**
      * 用户登录

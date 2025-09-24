@@ -31,14 +31,16 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
  * 商品表接口
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @RestController
 @RequestMapping("/commodity")
@@ -75,6 +77,14 @@ public class CommodityController {
         User loginUser = userService.getLoginUser(request);
         if (commodity.getTradeType() == null) {
             commodity.setTradeType(1);
+        }
+        if (commodity.getTradeType() == 2) {
+            commodity.setRentStatus(0);
+            commodity.setRentStartTime(null);
+            commodity.setRentEndTime(null);
+            commodity.setCommodityInventory(0);
+        } else if (commodity.getCommodityInventory() == null || commodity.getCommodityInventory() <= 0) {
+            commodity.setCommodityInventory(1);
         }
         checkSellerPermission(loginUser, commodity.getTradeType());
         commodity.setAdminId(loginUser.getId());
@@ -271,70 +281,125 @@ public class CommodityController {
     // 购买接口（根据余额情况自动支付或创建未支付订单）
     @PostMapping("/buy")
     public synchronized BaseResponse<Map<String, Object>> buyCommodity(@RequestBody BuyCommodityRequest buyRequest, HttpServletRequest request) {
-        // 1. 参数校验
-        if (buyRequest == null || buyRequest.getCommodityId() == null || buyRequest.getBuyNumber() <= 0) {
+        if (buyRequest == null || buyRequest.getCommodityId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数错误");
         }
 
-        // 2. 获取当前用户
         User loginUser = userService.getLoginUser(request);
 
-        // 3. 查询商品（带锁）
         Commodity commodity = commodityService.getByIdWithLock(buyRequest.getCommodityId());
         if (commodity == null || commodity.getIsDelete() == 1) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
-
-        // 4. 检查商品状态
         if (commodity.getIsListed() != 1) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "商品未上架");
         }
 
-        // 5. 计算总金额
-        BigDecimal totalAmount = commodity.getPrice().multiply(new BigDecimal(buyRequest.getBuyNumber()));
+        Integer tradeType = commodity.getTradeType() == null ? 1 : commodity.getTradeType();
+        int purchaseNumber = Math.max(1, buyRequest.getBuyNumber() == null ? 1 : buyRequest.getBuyNumber());
+        int rentalDuration = 0;
+        String rentalUnit = null;
+        if (tradeType == 1 && purchaseNumber <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "购买数量无效");
+        }
+        if (tradeType == 1) {
+            Integer stock = commodity.getCommodityInventory();
+            if (stock == null || stock < purchaseNumber) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存不足");
+            }
+        } else {
+            rentalDuration = buyRequest.getRentalDuration() == null ? 0 : buyRequest.getRentalDuration();
+            if (rentalDuration <= 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "请填写租用时长");
+            }
+            rentalUnit = org.apache.commons.lang3.StringUtils.defaultIfBlank(buyRequest.getRentalUnit(), "HOUR").toUpperCase();
+            if (!"HOUR".equals(rentalUnit) && !"DAY".equals(rentalUnit)) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "不支持的租用单位");
+            }
+            if (commodity.getRentStatus() != null && commodity.getRentStatus() == 1) {
+                Date rentEnd = commodity.getRentEndTime();
+                if (rentEnd == null || rentEnd.after(new Date())) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "该账号正在出租中");
+                }
+            }
+        }
 
-        // 6. 创建基础订单
+        long unitFactor = 1L;
+        if (tradeType == 2) {
+            unitFactor = "DAY".equals(rentalUnit) ? 24L : 1L;
+        }
+        BigDecimal totalAmount = tradeType == 1
+                ? commodity.getPrice().multiply(new BigDecimal(purchaseNumber))
+                : commodity.getPrice().multiply(new BigDecimal(rentalDuration * unitFactor));
+
         CommodityOrder order = new CommodityOrder();
         order.setUserId(loginUser.getId());
         order.setCommodityId(buyRequest.getCommodityId());
-        order.setBuyNumber(buyRequest.getBuyNumber());
+        order.setBuyNumber(tradeType == 1 ? purchaseNumber : 1);
         order.setPaymentAmount(totalAmount);
         order.setRemark(buyRequest.getRemark());
-        // 7. 事务处理
+        order.setTradeType(tradeType);
+        if (tradeType == 2) {
+            order.setRentalDuration(rentalDuration);
+            order.setRentalUnit(rentalUnit);
+        }
+
+        final int finalPurchaseNumber = purchaseNumber;
+        final int finalRentalDuration = rentalDuration;
+        final long finalUnitFactor = unitFactor;
+        final BigDecimal finalTotalAmount = totalAmount;
+        final int finalTradeType = tradeType;
+
         Map<String, Object> result = transactionTemplate.execute(status -> {
             try {
-                // 7.1 获取用户信息（带锁）
                 User user = userService.getByIdWithLock(loginUser.getId());
+                boolean balanceEnough = user.getBalance().compareTo(finalTotalAmount) >= 0;
 
-                // 7.2 判断余额是否充足
-                boolean balanceEnough = user.getBalance().compareTo(totalAmount) >= 0;
+                if (finalTradeType == 1 && commodity.getCommodityInventory() != null
+                        && commodity.getCommodityInventory() < finalPurchaseNumber) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存不足");
+                }
 
-                // 7.3 创建订单记录
+                if (finalTradeType == 2 && balanceEnough) {
+                    LocalDateTime start = LocalDateTime.now();
+                    LocalDateTime end = start.plusHours(finalRentalDuration * finalUnitFactor);
+                    order.setRentStartTime(Date.from(start.atZone(ZoneId.systemDefault()).toInstant()));
+                    order.setRentEndTime(Date.from(end.atZone(ZoneId.systemDefault()).toInstant()));
+                }
+
                 order.setPayStatus(balanceEnough ? 1 : 0);
                 if (!commodityOrderService.save(order)) {
                     throw new BusinessException(ErrorCode.OPERATION_ERROR, "订单创建失败");
                 }
 
-                // 7.4 如果余额充足则完成支付
                 if (balanceEnough) {
-                    // 扣减库存
-                    commodity.setCommodityInventory(commodity.getCommodityInventory() - buyRequest.getBuyNumber());
+                    if (finalTradeType == 1) {
+                        commodity.setCommodityInventory(commodity.getCommodityInventory() - finalPurchaseNumber);
+                    } else {
+                        commodity.setRentStatus(1);
+                        commodity.setRentStartTime(order.getRentStartTime());
+                        commodity.setRentEndTime(order.getRentEndTime());
+                    }
                     if (!commodityService.updateById(commodity)) {
-                        throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存更新失败");
+                        throw new BusinessException(ErrorCode.OPERATION_ERROR, "商品状态更新失败");
                     }
 
-                    // 扣减余额
-                    user.setBalance(user.getBalance().subtract(totalAmount));
+                    user.setBalance(user.getBalance().subtract(finalTotalAmount));
                     if (!userService.updateById(user)) {
                         throw new BusinessException(ErrorCode.OPERATION_ERROR, "余额扣减失败");
                     }
                 }
 
-                // 返回结果
                 Map<String, Object> resultMap = new HashMap<>();
                 resultMap.put("orderId", order.getId());
                 resultMap.put("payStatus", order.getPayStatus());
                 resultMap.put("needPay", !balanceEnough);
+                if (finalTradeType == 2) {
+                    resultMap.put("rentalDuration", order.getRentalDuration());
+                    resultMap.put("rentalUnit", order.getRentalUnit());
+                    resultMap.put("rentStartTime", order.getRentStartTime());
+                    resultMap.put("rentEndTime", order.getRentEndTime());
+                }
                 return resultMap;
 
             } catch (Exception e) {
@@ -350,66 +415,76 @@ public class CommodityController {
     // 支付接口（完成支付）
     @PostMapping("/pay")
     public synchronized BaseResponse<Boolean> payCommodityOrder(@RequestBody PayCommodityOrderRequest payRequest, HttpServletRequest request) {
-        // 1. 参数校验
         if (payRequest == null || payRequest.getCommodityOrderId() == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数错误");
         }
 
-        // 2. 获取当前用户
         User loginUser = userService.getLoginUser(request);
 
-        // 3. 查询订单（带锁）
         CommodityOrder order = commodityOrderService.getByIdWithLock(payRequest.getCommodityOrderId());
         if (order == null || order.getIsDelete() == 1) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "订单不存在");
         }
-
-        // 4. 验证订单归属
         if (!order.getUserId().equals(loginUser.getId())) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "无权操作此订单");
         }
-
-        // 5. 检查订单状态
         if (order.getPayStatus() != 0) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR,
                     order.getPayStatus() == 1 ? "订单已完成支付" : "订单已过期");
         }
 
-        // 6. todo 检查订单有效期 (后期直接 Redis 查询，有就是没过期，这边用定时任务）
-
-        // 7. 查询商品（带锁）
         Commodity commodity = commodityService.getByIdWithLock(order.getCommodityId());
         if (commodity == null || commodity.getIsDelete() == 1) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
         }
 
-        // 8. 验证库存
-        if (commodity.getCommodityInventory() < order.getBuyNumber()) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存不足");
+        Integer tradeType = order.getTradeType() == null ? 1 : order.getTradeType();
+        if (tradeType == 1) {
+            if (commodity.getCommodityInventory() < order.getBuyNumber()) {
+                throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存不足");
+            }
+        } else {
+            if (commodity.getRentStatus() != null && commodity.getRentStatus() == 1) {
+                Date rentEnd = commodity.getRentEndTime();
+                if (rentEnd == null || rentEnd.after(new Date())) {
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "该账号正在出租中");
+                }
+            }
+            if (order.getRentalDuration() == null || order.getRentalDuration() <= 0) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR, "租用信息不完整");
+            }
         }
 
-        // 9. 查询用户（带锁）
         User user = userService.getByIdWithLock(loginUser.getId());
         if (user.getBalance().compareTo(order.getPaymentAmount()) < 0) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR, "余额不足");
         }
 
-        // 10. 事务处理
         boolean result = transactionTemplate.execute(status -> {
             try {
-                // 10.1 扣减库存
-                commodity.setCommodityInventory(commodity.getCommodityInventory() - order.getBuyNumber());
+                if (tradeType == 1) {
+                    commodity.setCommodityInventory(commodity.getCommodityInventory() - order.getBuyNumber());
+                } else {
+                    long unitFactor = "DAY".equalsIgnoreCase(order.getRentalUnit()) ? 24L : 1L;
+                    LocalDateTime start = LocalDateTime.now();
+                    LocalDateTime end = start.plusHours(order.getRentalDuration() * unitFactor);
+                    Date rentStart = Date.from(start.atZone(ZoneId.systemDefault()).toInstant());
+                    Date rentEnd = Date.from(end.atZone(ZoneId.systemDefault()).toInstant());
+                    order.setRentStartTime(rentStart);
+                    order.setRentEndTime(rentEnd);
+                    commodity.setRentStatus(1);
+                    commodity.setRentStartTime(rentStart);
+                    commodity.setRentEndTime(rentEnd);
+                }
                 if (!commodityService.updateById(commodity)) {
-                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "库存更新失败");
+                    throw new BusinessException(ErrorCode.OPERATION_ERROR, "商品状态更新失败");
                 }
 
-                // 10.2 扣减余额
                 user.setBalance(user.getBalance().subtract(order.getPaymentAmount()));
                 if (!userService.updateById(user)) {
                     throw new BusinessException(ErrorCode.OPERATION_ERROR, "余额扣减失败");
                 }
 
-                // 10.3 更新订单状态
                 order.setPayStatus(1);
                 if (!commodityOrderService.updateById(order)) {
                     throw new BusinessException(ErrorCode.OPERATION_ERROR, "订单状态更新失败");

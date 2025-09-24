@@ -16,8 +16,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 /**
  * 请求响应日志 AOP
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  **/
 @Aspect
 @Component

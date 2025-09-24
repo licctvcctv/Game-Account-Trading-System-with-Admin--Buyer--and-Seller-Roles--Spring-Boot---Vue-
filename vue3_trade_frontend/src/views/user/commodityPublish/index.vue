@@ -56,23 +56,13 @@
           </el-col>
 
           <el-col :span="8">
-            <el-form-item label="新旧程度">
-              <el-select v-model="form.degree" clearable placeholder="请选择">
-                <el-option label="全新" value="全新" />
-                <el-option label="九成新" value="九成新" />
-                <el-option label="八成新" value="八成新" />
-                <el-option label="七成新" value="七成新" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="价格(¥)" prop="price">
+            <el-form-item :label="priceLabel" prop="price">
               <el-input v-model.number="form.price" placeholder="请输入价格">
                 <template #prefix>¥</template>
               </el-input>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col v-if="!isRental" :span="8">
             <el-form-item label="库存" prop="commodityInventory">
               <el-input v-model.number="form.commodityInventory" placeholder="请输入库存数量" />
             </el-form-item>
@@ -145,7 +135,6 @@ const tradeTypeOptions = computed(() => {
 const form = ref({
   commodityName: "",
   commodityDescription: "",
-  degree: "",
   commodityTypeId: undefined as unknown as number | undefined,
   isListed: 1,
   commodityInventory: 1,
@@ -154,11 +143,26 @@ const form = ref({
   tradeType: undefined as unknown as number | undefined
 });
 
+const isRental = computed(() => form.value.tradeType === 2);
+const priceLabel = computed(() => (isRental.value ? "时价(元/小时)" : "价格(元)"));
+
+const validateInventory = (_rule: any, value: any, callback: any) => {
+  if (isRental.value) {
+    callback();
+    return;
+  }
+  if (value === undefined || value === null || value <= 0) {
+    callback(new Error("请输入大于 0 的库存"));
+  } else {
+    callback();
+  }
+};
+
 const rules = {
   commodityName: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
   commodityTypeId: [{ required: true, message: "请选择分类", trigger: "change" }],
   price: [{ required: true, message: "请输入价格", trigger: "blur" }],
-  commodityInventory: [{ required: true, message: "请输入库存", trigger: "blur" }],
+  commodityInventory: [{ validator: validateInventory, trigger: "blur" }],
   tradeType: [{ required: true, message: "请选择交易类型", trigger: "change" }]
 };
 
@@ -192,6 +196,17 @@ watch(
     }
   },
   { immediate: true }
+);
+
+watch(
+  () => form.value.tradeType,
+  (type) => {
+    if (type === 2) {
+      form.value.commodityInventory = 0;
+    } else if (form.value.commodityInventory === undefined || form.value.commodityInventory <= 0) {
+      form.value.commodityInventory = 1;
+    }
+  }
 );
 
 watch(allowPublish, async (val, oldVal) => {
@@ -246,10 +261,9 @@ const submit = async () => {
       const payload: any = {
         commodityName: form.value.commodityName,
         commodityDescription: form.value.commodityDescription,
-        degree: form.value.degree,
         commodityTypeId: form.value.commodityTypeId,
         isListed: form.value.isListed,
-        commodityInventory: form.value.commodityInventory,
+        commodityInventory: isRental.value ? 0 : form.value.commodityInventory,
         price: form.value.price,
         commodityAvatar: form.value.commodityAvatar,
         tradeType: form.value.tradeType

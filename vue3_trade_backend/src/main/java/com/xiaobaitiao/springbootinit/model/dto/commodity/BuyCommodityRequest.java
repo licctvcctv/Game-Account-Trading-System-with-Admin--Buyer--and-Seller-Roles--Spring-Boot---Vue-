@@ -6,7 +6,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 /**
- * @author 程序员小白条
+ * 
  * @date 2025/3/12 14:16
  * @gitee https://gitee.com/falle22222n-leaves/vue_-book-manage-system
  */
@@ -23,6 +23,16 @@ public class BuyCommodityRequest implements Serializable {
      * 购买商品的数量
      */
     private Integer buyNumber;
+
+    /**
+     * 租用时长（租用订单使用）
+     */
+    private Integer rentalDuration;
+
+    /**
+     * 租用单位（HOUR/DAY）
+     */
+    private String rentalUnit;
     /**
      * 支付金额
      */

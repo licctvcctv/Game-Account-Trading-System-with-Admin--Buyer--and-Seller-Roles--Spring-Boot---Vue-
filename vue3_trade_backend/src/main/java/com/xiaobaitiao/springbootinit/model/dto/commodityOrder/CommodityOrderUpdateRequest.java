@@ -9,8 +9,8 @@ import java.util.List;
 /**
  * 更新商品订单表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class CommodityOrderUpdateRequest implements Serializable {
@@ -40,9 +40,24 @@ public class CommodityOrderUpdateRequest implements Serializable {
     private Integer buyNumber;
 
     /**
+     * 租用时长
+     */
+    private Integer rentalDuration;
+
+    /**
+     * 租用单位
+     */
+    private String rentalUnit;
+
+    /**
      * 订单总支付金额
      */
     private BigDecimal paymentAmount;
+
+    /**
+     * 交易类型：1-出售 2-出租
+     */
+    private Integer tradeType;
 
     /**
      * 0-未支付 1-已支付

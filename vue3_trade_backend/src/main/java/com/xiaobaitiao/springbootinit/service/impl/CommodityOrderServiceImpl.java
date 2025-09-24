@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 /**
  * 商品订单表服务实现
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Service
 @Slf4j
@@ -58,12 +58,30 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         Long userId = commodityOrder.getUserId();
         Long commodityId = commodityOrder.getCommodityId();
         Integer buyNumber = commodityOrder.getBuyNumber();
+        Integer rentalDuration = commodityOrder.getRentalDuration();
+        Integer tradeType = commodityOrder.getTradeType();
+        String rentalUnit = commodityOrder.getRentalUnit();
 
         // 创建数据时，参数不能为空
         if (add) {
             ThrowUtils.throwIf(userId == null || userId <= 0, ErrorCode.PARAMS_ERROR);
             ThrowUtils.throwIf(commodityId == null || commodityId <= 0, ErrorCode.PARAMS_ERROR);
-            ThrowUtils.throwIf(buyNumber == null || buyNumber <= 0, ErrorCode.PARAMS_ERROR);
+            ThrowUtils.throwIf(tradeType == null || (tradeType != 1 && tradeType != 2), ErrorCode.PARAMS_ERROR);
+            if (tradeType == 1) {
+                ThrowUtils.throwIf(buyNumber == null || buyNumber <= 0, ErrorCode.PARAMS_ERROR);
+            } else {
+                ThrowUtils.throwIf(rentalDuration == null || rentalDuration <= 0, ErrorCode.PARAMS_ERROR);
+                ThrowUtils.throwIf(StringUtils.isBlank(rentalUnit), ErrorCode.PARAMS_ERROR);
+            }
+        }
+        if (buyNumber != null) {
+            ThrowUtils.throwIf(buyNumber < 0, ErrorCode.PARAMS_ERROR);
+        }
+        if (rentalDuration != null) {
+            ThrowUtils.throwIf(rentalDuration <= 0, ErrorCode.PARAMS_ERROR);
+        }
+        if (StringUtils.isNotBlank(rentalUnit)) {
+            ThrowUtils.throwIf(rentalUnit.length() > 16, ErrorCode.PARAMS_ERROR);
         }
 
     }
@@ -85,6 +103,9 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         Long commodityId = commodityOrderQueryRequest.getCommodityId();
         String remark = commodityOrderQueryRequest.getRemark();
         Integer buyNumber = commodityOrderQueryRequest.getBuyNumber();
+        Integer rentalDuration = commodityOrderQueryRequest.getRentalDuration();
+        String rentalUnit = commodityOrderQueryRequest.getRentalUnit();
+        Integer tradeType = commodityOrderQueryRequest.getTradeType();
         Integer payStatus = commodityOrderQueryRequest.getPayStatus();
         String sortField = commodityOrderQueryRequest.getSortField();
         String sortOrder = commodityOrderQueryRequest.getSortOrder();
@@ -93,6 +114,9 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(payStatus), "payStatus", payStatus);
         queryWrapper.eq(ObjectUtils.isNotEmpty(buyNumber), "buyNumber", buyNumber);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(rentalDuration), "rentalDuration", rentalDuration);
+        queryWrapper.eq(StringUtils.isNotBlank(rentalUnit), "rentalUnit", rentalUnit);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(tradeType), "tradeType", tradeType);
         queryWrapper.eq(ObjectUtils.isNotEmpty(commodityId), "commodityId", commodityId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);

@@ -5,8 +5,8 @@ import com.xiaobaitiao.springbootinit.common.ErrorCode;
 /**
  * 抛异常工具类
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 public class ThrowUtils {
 

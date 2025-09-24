@@ -6,8 +6,8 @@ import lombok.Data;
 /**
  * 用户更新个人信息请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class UserUpdateMyRequest implements Serializable {
@@ -26,6 +26,21 @@ public class UserUpdateMyRequest implements Serializable {
      * 简介
      */
     private String userProfile;
+
+    /**
+     * 联系方式
+     */
+    private String userPhone;
+
+    /**
+     * 用户实名
+     */
+    private String realName;
+
+    /**
+     * 身份证号
+     */
+    private String idCardNumber;
 
     private static final long serialVersionUID = 1L;
 }

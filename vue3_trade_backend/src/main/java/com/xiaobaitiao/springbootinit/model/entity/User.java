@@ -13,8 +13,8 @@ import lombok.Data;
 /**
  * 用户
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @TableName(value = "user")
 @Data
@@ -69,6 +69,16 @@ public class User implements Serializable {
      * 联系方式
      */
     private String userPhone;
+
+    /**
+     * 用户实名
+     */
+    private String realName;
+
+    /**
+     * 身份证号
+     */
+    private String idCardNumber;
     /**
      * 用户余额
      */

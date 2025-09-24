@@ -1,6 +1,6 @@
 # 线上配置文件
-# @author 程序员小白条
-# @from <a href="https://luoye6.github.io/"> 个人博客
+# 
+# 
 server:
   port: 8102
 spring:

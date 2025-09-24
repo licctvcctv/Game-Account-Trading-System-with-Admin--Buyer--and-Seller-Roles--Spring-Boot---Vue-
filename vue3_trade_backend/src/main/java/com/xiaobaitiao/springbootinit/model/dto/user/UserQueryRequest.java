@@ -37,6 +37,21 @@ public class UserQueryRequest extends PageRequest implements Serializable {
      * 简介
      */
     private String userProfile;
+
+    /**
+     * 联系方式
+     */
+    private String userPhone;
+
+    /**
+     * 用户实名
+     */
+    private String realName;
+
+    /**
+     * 身份证号
+     */
+    private String idCardNumber;
     /**
      * 用户余额
      */

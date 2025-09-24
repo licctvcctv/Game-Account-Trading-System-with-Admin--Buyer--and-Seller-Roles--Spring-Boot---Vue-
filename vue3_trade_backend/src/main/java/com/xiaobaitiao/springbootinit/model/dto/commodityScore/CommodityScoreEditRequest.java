@@ -14,8 +14,8 @@ import java.util.List;
 /**
  * 编辑商品评分表请求
  *
- * @author 程序员小白条
- * @from <a href="https://luoye6.github.io/"> 个人博客
+ * 
+ * 
  */
 @Data
 public class CommodityScoreEditRequest implements Serializable {
@@ -39,6 +39,11 @@ public class CommodityScoreEditRequest implements Serializable {
      * 评分（0-5，星级评分）
      */
     private Integer score;
+
+    /**
+     * 评分评论
+     */
+    private String comment;
 
     private static final long serialVersionUID = 1L;
 }

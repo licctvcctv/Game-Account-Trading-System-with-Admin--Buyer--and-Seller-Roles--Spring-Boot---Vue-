@@ -15,6 +15,8 @@
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
         <result property="userPhone" column="userPhone" jdbcType="VARCHAR"/>
+        <result property="realName" column="realName" jdbcType="VARCHAR"/>
+        <result property="idCardNumber" column="idCardNumber" jdbcType="VARCHAR"/>
         <result property="balance" column="balance" jdbcType="DECIMAL"/>
         <result property="sellPermission" column="sellPermission" jdbcType="TINYINT"/>
         <result property="rentPermission" column="rentPermission" jdbcType="TINYINT"/>
@@ -30,7 +32,7 @@
     <sql id="Base_Column_List">
         id,userAccount,userPassword,
         unionId,mpOpenId,userName,
-        userAvatar,userProfile,userRole,userPhone,balance,
+        userAvatar,userProfile,userRole,userPhone,realName,idCardNumber,balance,
         sellPermission,rentPermission,sellApplyStatus,rentApplyStatus,
         aiRemainNumber,
         editTime,createTime,updateTime,

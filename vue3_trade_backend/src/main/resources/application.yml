@@ -1,6 +1,6 @@
 # 公共配置文件
-# @author 程序员小白条
-# @from <a href="https://luoye6.github.io/"> 个人博客
+# 
+# 
 spring:
   application:
     name: 游戏账号租售系统
