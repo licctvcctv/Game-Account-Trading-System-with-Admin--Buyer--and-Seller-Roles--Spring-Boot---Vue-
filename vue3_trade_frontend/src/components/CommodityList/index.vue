@@ -15,14 +15,14 @@
                 {{ item.commodityDescription }}
               </div>
               <div class="tags">
-                <el-tag type="info" style="margin-right: 5px">
-                  {{ item.degree }}
+                <el-tag type="warning" style="margin-right: 5px">
+                  价格: {{ "¥" + Number(item.price ?? 0).toFixed(2) }}
                 </el-tag>
                 <el-tag type="success" style="margin-right: 5px">
                   库存: {{ item.commodityInventory }}
                 </el-tag>
                 <el-tag type="primary" style="margin-right: 5px">
-                  所属分类：{{ item.commodityTypeName }}
+                  所属分类：{{ item.commodityTypeName || "未分类" }}
                 </el-tag>
               </div>
               <div class="stats">

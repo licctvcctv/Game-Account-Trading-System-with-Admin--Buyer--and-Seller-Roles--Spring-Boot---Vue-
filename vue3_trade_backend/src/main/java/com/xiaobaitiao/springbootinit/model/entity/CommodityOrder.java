@@ -27,6 +27,11 @@ public class CommodityOrder implements Serializable {
     private Long userId;
 
     /**
+     * 卖家 ID
+     */
+    private Long sellerId;
+
+    /**
      * 商品 ID
      */
     private Long commodityId;
@@ -65,6 +70,33 @@ public class CommodityOrder implements Serializable {
      * 0-未支付 1-已支付
      */
     private Integer payStatus;
+
+    /**
+     * 发货状态 0-未发货 1-已发货
+     */
+    private Integer deliveryStatus;
+
+    /**
+     * 发货内容（卡密/账号等）
+     */
+    private String deliveryContent;
+
+    /**
+     * 发货时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date deliverTime;
+
+    /**
+     * 完成状态 0-未完成 1-已完成
+     */
+    private Integer finishStatus;
+
+    /**
+     * 完成时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    private Date finishTime;
 
     /**
      * 租用开始时间

@@ -140,6 +140,17 @@ export const asnycAdminRoute = [
         }
       },
       {
+        //充值审核
+        path: "/admin/rechargeManagement",
+        component: () => import("@/views/admin/rechargeManagement/index.vue"),
+        name: "rechargeManagement",
+        meta: {
+          title: "充值审核", //菜单标题
+          hidden: false,
+          icon: "Coin" //菜单文字左侧的图标,支持element-plus全部图标
+        }
+      },
+      {
         //权限管理页面
         path: "/admin/noticeManagement",
         component: () => import("@/views/admin/noticeManagement/index.vue"),
@@ -295,16 +306,6 @@ export const asnycUserRoute = [
           title: "AI对话",
           icon: "Microphone",
           hidden: true
-        }
-      },
-      {
-        path: "/user/commodityRecommend",
-        component: () => import("@/views/user/commodityRecommend/index.vue"),
-        name: "commodityRecommend",
-        meta: {
-          title: "账号推荐",
-          icon: "Sell",
-          hidden: false
         }
       }
     ]

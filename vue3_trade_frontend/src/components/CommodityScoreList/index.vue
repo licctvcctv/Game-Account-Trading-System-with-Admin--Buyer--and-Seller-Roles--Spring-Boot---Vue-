@@ -25,7 +25,9 @@
               "
             />
             <div class="user-detail">
-              <div class="username">{{ item.userVO.userName || "匿名用户" }}</div>
+              <div class="username">
+                {{ item.userVO.userName || "匿名用户" }}
+              </div>
               <div class="star-display">
                 <el-icon
                   v-for="star in 5"

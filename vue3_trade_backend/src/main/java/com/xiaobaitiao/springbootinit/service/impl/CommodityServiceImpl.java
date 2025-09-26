@@ -92,7 +92,6 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         Long id = commodityQueryRequest.getId();
         String commodityName = commodityQueryRequest.getCommodityName();
         String commodityDescription = commodityQueryRequest.getCommodityDescription();
-        String degree = commodityQueryRequest.getDegree();
         Long commodityTypeId = commodityQueryRequest.getCommodityTypeId();
         Long adminId = commodityQueryRequest.getAdminId();
         Integer isListed = commodityQueryRequest.getIsListed();
@@ -103,7 +102,6 @@ public class CommodityServiceImpl extends ServiceImpl<CommodityMapper, Commodity
         // 模糊查询
         queryWrapper.like(StringUtils.isNotBlank(commodityName), "commodityName", commodityName);
         queryWrapper.like(StringUtils.isNotBlank(commodityDescription), "commodityDescription", commodityDescription);
-        queryWrapper.like(StringUtils.isNotBlank(degree), "degree", degree);
         // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(commodityTypeId), "commodityTypeId", commodityTypeId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);

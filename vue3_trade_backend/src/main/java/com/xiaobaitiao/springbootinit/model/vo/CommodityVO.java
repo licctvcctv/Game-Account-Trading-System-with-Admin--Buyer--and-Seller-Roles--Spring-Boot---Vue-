@@ -39,11 +39,6 @@ public class CommodityVO implements Serializable {
     private String commodityAvatar;
 
     /**
-     * 商品新旧程度（例如 9成新）
-     */
-    private String degree;
-
-    /**
      * 商品分类 ID
      */
     private Long commodityTypeId;

@@ -23,14 +23,6 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="新旧程度">
-            <el-input
-              v-model="queryParams.degree"
-              placeholder="请输入新旧程度"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="6">
           <el-form-item label="库存数量">
             <el-input
               v-model="queryParams.commodityInventory"
@@ -101,7 +93,6 @@ const commodityTypeList = ref([]);
 const queryParams = ref({
   commodityName: "",
   commodityDescription: "",
-  degree: "",
   commodityInventory: "",
   commodityTypeId: "" // 新增账号分类 ID
 });
@@ -114,7 +105,6 @@ const getCommodityList = async () => {
       pageSize: pageSize.value,
       commodityName: queryParams.value.commodityName,
       commodityDescription: queryParams.value.commodityDescription,
-      degree: queryParams.value.degree,
       commodityInventory: queryParams.value.commodityInventory,
       commodityTypeId: queryParams.value.commodityTypeId, // 新增账号分类 ID
       isListed: 1
@@ -152,9 +142,8 @@ const resetQuery = () => {
   queryParams.value = {
     commodityName: "",
     commodityDescription: "",
-    degree: "",
     commodityInventory: "",
-  commodityTypeId: "" // 重置账号分类 ID
+    commodityTypeId: "" // 重置账号分类 ID
   };
   getCommodityList();
 };

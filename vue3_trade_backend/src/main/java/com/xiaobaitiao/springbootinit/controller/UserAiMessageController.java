@@ -91,15 +91,14 @@ public class UserAiMessageController {
         ThrowUtils.throwIf(aiRemainNumber <= 0, ErrorCode.USER_BALANCE_NOT_ENOUGH);
         userAiMessage.setUserId(loginUser.getId());
         userAiMessage.setUserInputText(userInputText);
-        String presetInformation = "你是一个二手商品交易推荐官，你需要根据数据库的商品名称、价格、新旧程度、库存、用户的现有余额、用户的偏好等多方面进行适配性推荐，并给出相关的理由。\n";
+        String presetInformation = "你是一个二手商品交易推荐官，你需要根据数据库的商品名称、价格、库存、用户的现有余额、用户的偏好等多方面进行适配性推荐，并给出相关的理由。\n";
         String userText = "用户偏好信息：" + userInputText+"\n";
         // 使用 Stream 处理数据
         String commodityList = commodityService.list().stream()
                 .filter(commodity -> commodity.getIsListed() == 1) // 过滤出已上架的商品
                 .map(commodity -> String.format(
-                        "商品名称: %s, 新旧程度: %s, 库存: %d, 价格: %.2f",
+                        "商品名称: %s, 库存: %d, 价格: %.2f",
                         commodity.getCommodityName(),
-                        commodity.getDegree(),
                         commodity.getCommodityInventory(),
                         commodity.getPrice()
                 ))

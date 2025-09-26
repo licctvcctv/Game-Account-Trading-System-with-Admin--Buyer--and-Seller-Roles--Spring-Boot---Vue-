@@ -10,7 +10,9 @@ import com.xiaobaitiao.springbootinit.constant.UserConstant;
 import com.xiaobaitiao.springbootinit.exception.BusinessException;
 import com.xiaobaitiao.springbootinit.exception.ThrowUtils;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderAddRequest;
+import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderDeliverRequest;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderEditRequest;
+import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderFinishRequest;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderQueryRequest;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderUpdateRequest;
 import com.xiaobaitiao.springbootinit.model.entity.CommodityOrder;
@@ -209,6 +211,24 @@ public class CommodityOrderController {
     }
 
     /**
+     * 分页获取当前登录用户作为卖家的订单列表
+     */
+    @PostMapping("/my/sell/list/page/vo")
+    public BaseResponse<Page<CommodityOrderVO>> listMySellCommodityOrderVOByPage(
+            @RequestBody CommodityOrderQueryRequest commodityOrderQueryRequest,
+            HttpServletRequest request) {
+        ThrowUtils.throwIf(commodityOrderQueryRequest == null, ErrorCode.PARAMS_ERROR);
+        User loginUser = userService.getLoginUser(request);
+        commodityOrderQueryRequest.setSellerId(loginUser.getId());
+        long current = commodityOrderQueryRequest.getCurrent();
+        long size = commodityOrderQueryRequest.getPageSize();
+        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        Page<CommodityOrder> commodityOrderPage = commodityOrderService.page(new Page<>(current, size),
+                commodityOrderService.getQueryWrapper(commodityOrderQueryRequest));
+        return ResultUtils.success(commodityOrderService.getCommodityOrderVOPage(commodityOrderPage, request));
+    }
+
+    /**
      * 编辑商品订单表（给用户使用）
      *
      * @param commodityOrderEditRequest
@@ -239,6 +259,31 @@ public class CommodityOrderController {
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
+
+    /**
+     * 卖家发货
+     */
+    @PostMapping("/deliver")
+    public BaseResponse<Boolean> deliverCommodityOrder(@RequestBody CommodityOrderDeliverRequest deliverRequest,
+            HttpServletRequest request) {
+        ThrowUtils.throwIf(deliverRequest == null || deliverRequest.getId() == null, ErrorCode.PARAMS_ERROR);
+        User seller = userService.getLoginUser(request);
+        commodityOrderService.deliverOrder(deliverRequest.getId(), deliverRequest.getDeliveryContent(), seller);
+        return ResultUtils.success(true);
+    }
+
+    /**
+     * 买家确认收货
+     */
+    @PostMapping("/confirm")
+    public BaseResponse<Boolean> confirmCommodityOrder(@RequestBody CommodityOrderFinishRequest finishRequest,
+            HttpServletRequest request) {
+        ThrowUtils.throwIf(finishRequest == null || finishRequest.getId() == null, ErrorCode.PARAMS_ERROR);
+        User buyer = userService.getLoginUser(request);
+        commodityOrderService.finishOrder(finishRequest.getId(), finishRequest.getReviewMessage(), buyer);
+        return ResultUtils.success(true);
+    }
+
     /**
      * 根据 userId 和 payStatus 查询商品订单，返回日期和订单数量的列表
      *

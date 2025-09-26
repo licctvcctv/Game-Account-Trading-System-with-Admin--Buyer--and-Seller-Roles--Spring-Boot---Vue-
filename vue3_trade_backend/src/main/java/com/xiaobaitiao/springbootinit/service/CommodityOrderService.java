@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderQueryRequest;
 import com.xiaobaitiao.springbootinit.model.entity.CommodityOrder;
+import com.xiaobaitiao.springbootinit.model.entity.User;
 import com.xiaobaitiao.springbootinit.model.vo.CommodityOrderVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -60,5 +61,9 @@ public interface CommodityOrderService extends IService<CommodityOrder> {
     CommodityOrder getByIdWithLock(Long id);
 
     List<CommodityOrder> listByQuery(CommodityOrderQueryRequest queryRequest);
+
+    void deliverOrder(Long orderId, String deliveryContent, User seller);
+
+    void finishOrder(Long orderId, String reviewMessage, User buyer);
 }
 

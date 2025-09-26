@@ -6,8 +6,6 @@ import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 查询商品表请求
@@ -33,11 +31,6 @@ public class CommodityQueryRequest extends PageRequest implements Serializable {
      * 商品简介
      */
     private String commodityDescription;
-
-    /**
-     * 商品新旧程度（例如 9成新）
-     */
-    private String degree;
 
     /**
      * 商品分类 ID

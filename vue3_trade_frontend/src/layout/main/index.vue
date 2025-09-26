@@ -6,7 +6,6 @@
       <component :is="Component" v-if="flag" />
     </transition>
   </router-view>
-  
 </template>
 
 <script setup lang="ts">

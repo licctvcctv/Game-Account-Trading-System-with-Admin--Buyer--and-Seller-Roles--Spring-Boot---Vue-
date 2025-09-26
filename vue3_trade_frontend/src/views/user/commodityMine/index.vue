@@ -7,7 +7,9 @@
           <p class="sub">仅展示你发布的账号</p>
         </div>
         <div>
-          <el-button type="primary" @click="goPublish" :icon="Plus">发布账号</el-button>
+          <el-button type="primary" @click="goPublish" :icon="Plus"
+            >发布账号</el-button
+          >
         </div>
       </div>
 
@@ -15,14 +17,24 @@
         <el-table :data="list" v-loading="loading" style="width: 100%">
           <el-table-column label="封面" width="90">
             <template #default="{ row }">
-              <el-image :src="row.commodityAvatar" style="width:64px;height:64px;border-radius:6px" />
+              <el-image
+                :src="row.commodityAvatar"
+                style="width: 64px; height: 64px; border-radius: 6px"
+              />
             </template>
           </el-table-column>
-          <el-table-column prop="commodityName" label="账号名称" min-width="160" />
+          <el-table-column
+            prop="commodityName"
+            label="账号名称"
+            min-width="160"
+          />
           <el-table-column prop="commodityTypeName" label="分类" width="120" />
           <el-table-column label="类型" width="100">
             <template #default="{ row }">
-              <el-tag size="small" :type="row.tradeType === 1 ? 'success' : 'warning'">
+              <el-tag
+                size="small"
+                :type="row.tradeType === 1 ? 'success' : 'warning'"
+              >
                 {{ row.tradeType === 1 ? "出售" : "出租" }}
               </el-tag>
             </template>
@@ -35,17 +47,24 @@
           </el-table-column>
           <el-table-column label="库存" width="90">
             <template #default="{ row }">
-              {{ row.tradeType === 2 ? '-' : row.commodityInventory }}
+              {{ row.tradeType === 2 ? "-" : row.commodityInventory }}
             </template>
           </el-table-column>
           <el-table-column label="上架" width="120">
             <template #default="{ row }">
-              <el-switch v-model="row.isListed" :active-value="1" :inactive-value="0" @change="toggleListed(row)" />
+              <el-switch
+                v-model="row.isListed"
+                :active-value="1"
+                :inactive-value="0"
+                @change="toggleListed(row)"
+              />
             </template>
           </el-table-column>
           <el-table-column label="操作" width="320" fixed="right">
             <template #default="{ row }">
-              <el-button size="small" type="primary" @click="openEdit(row)">编辑</el-button>
+              <el-button size="small" type="primary" @click="openEdit(row)"
+                >编辑</el-button
+              >
               <el-button size="small" @click="preview(row)">预览</el-button>
               <el-popconfirm title="确定删除该账号？" @confirm="doDelete(row)">
                 <template #reference>
@@ -69,39 +88,75 @@
         </div>
 
         <el-dialog v-model="editVisible" title="编辑账号" width="560px">
-          <el-form :model="editForm" :rules="rules" ref="formRef" label-width="90px">
+          <el-form
+            :model="editForm"
+            :rules="rules"
+            ref="formRef"
+            label-width="90px"
+          >
             <el-form-item label="账号名称" prop="commodityName">
               <el-input v-model="editForm.commodityName" />
             </el-form-item>
             <el-form-item label="账号分类" prop="commodityTypeId">
-              <el-select v-model="editForm.commodityTypeId" filterable placeholder="请选择分类">
-                <el-option v-for="t in commodityTypeList" :key="t.id" :label="t.typeName" :value="t.id" />
+              <el-select
+                v-model="editForm.commodityTypeId"
+                filterable
+                placeholder="请选择分类"
+              >
+                <el-option
+                  v-for="t in commodityTypeList"
+                  :key="t.id"
+                  :label="t.typeName"
+                  :value="t.id"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="交易类型" prop="tradeType">
               <el-select v-model="editForm.tradeType" placeholder="请选择类型">
-                <el-option v-for="opt in editableTradeTypeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                <el-option
+                  v-for="opt in editableTradeTypeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
             <el-form-item label="账号简介">
-              <el-input v-model="editForm.commodityDescription" type="textarea" :rows="3" />
+              <el-input
+                v-model="editForm.commodityDescription"
+                type="textarea"
+                :rows="3"
+              />
             </el-form-item>
             <el-form-item :label="editPriceLabel" prop="price">
               <el-input v-model.number="editForm.price" />
             </el-form-item>
-            <el-form-item v-if="!editIsRental" label="库存" prop="commodityInventory">
+            <el-form-item
+              v-if="!editIsRental"
+              label="库存"
+              prop="commodityInventory"
+            >
               <el-input-number v-model="editForm.commodityInventory" :min="0" />
             </el-form-item>
             <el-form-item label="封面图">
-              <el-input v-model="editForm.commodityAvatar" placeholder="请输入图片URL或在发布页上传后粘贴链接" />
+              <el-input
+                v-model="editForm.commodityAvatar"
+                placeholder="请输入图片URL或在发布页上传后粘贴链接"
+              />
             </el-form-item>
             <el-form-item label="是否上架">
-              <el-switch v-model="editForm.isListed" :active-value="1" :inactive-value="0" />
+              <el-switch
+                v-model="editForm.isListed"
+                :active-value="1"
+                :inactive-value="0"
+              />
             </el-form-item>
           </el-form>
           <template #footer>
             <el-button @click="editVisible = false">取消</el-button>
-            <el-button type="primary" :loading="saving" @click="saveEdit">保存</el-button>
+            <el-button type="primary" :loading="saving" @click="saveEdit"
+              >保存</el-button
+            >
           </template>
         </el-dialog>
       </el-card>
@@ -122,7 +177,11 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
-import { listMyCommodityVoByPageUsingPost, editCommodityUsingPost, deleteCommodityUsingPost } from "@/api/commodityController";
+import {
+  listMyCommodityVoByPageUsingPost,
+  editCommodityUsingPost,
+  deleteCommodityUsingPost
+} from "@/api/commodityController";
 import { listCommodityTypeVoByPageUsingPost } from "@/api/commodityTypeController";
 import { Plus } from "@element-plus/icons-vue";
 import { ElMessage } from "element-plus";
@@ -142,9 +201,15 @@ const formRef = ref();
 const commodityTypeList = ref<any[]>([]);
 
 const editIsRental = computed(() => editForm.value?.tradeType === 2);
-const editPriceLabel = computed(() => (editIsRental.value ? "时价(¥/小时)" : "价格(¥)"));
+const editPriceLabel = computed(() =>
+  editIsRental.value ? "时价(¥/小时)" : "价格(¥)"
+);
 
-const allowPublish = computed(() => (userStore.sellPermission ?? 0) === 1 || (userStore.rentPermission ?? 0) === 1);
+const allowPublish = computed(
+  () =>
+    (userStore.sellPermission ?? 0) === 1 ||
+    (userStore.rentPermission ?? 0) === 1
+);
 
 const tradeTypeOptions = computed(() => {
   const options: { label: string; value: number }[] = [];
@@ -161,7 +226,10 @@ const editableTradeTypeOptions = computed(() => {
   const opts = [...tradeTypeOptions.value];
   const currentType = editForm.value?.tradeType;
   if (currentType && !opts.find((item) => item.value === currentType)) {
-    opts.push({ label: currentType === 1 ? "出售" : "出租", value: currentType });
+    opts.push({
+      label: currentType === 1 ? "出售" : "出租",
+      value: currentType
+    });
   }
   return opts;
 });
@@ -179,17 +247,24 @@ const validateEditInventory = (_rule: any, value: any, callback: any) => {
 };
 
 const rules = {
-  commodityName: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
+  commodityName: [
+    { required: true, message: "请输入账号名称", trigger: "blur" }
+  ],
   price: [{ required: true, message: "请输入价格", trigger: "blur" }],
   commodityInventory: [{ validator: validateEditInventory, trigger: "blur" }],
-  commodityTypeId: [{ required: true, message: "请选择分类", trigger: "change" }],
+  commodityTypeId: [
+    { required: true, message: "请选择分类", trigger: "change" }
+  ],
   tradeType: [{ required: true, message: "请选择交易类型", trigger: "change" }]
 };
 
 const load = async () => {
   loading.value = true;
   try {
-    const res: any = await listMyCommodityVoByPageUsingPost({ current: current.value, pageSize: pageSize.value });
+    const res: any = await listMyCommodityVoByPageUsingPost({
+      current: current.value,
+      pageSize: pageSize.value
+    });
     if (res.code === 200) {
       list.value = res.data.records || [];
       total.value = parseInt(res.data.total || 0);
@@ -229,7 +304,10 @@ const preview = (row: any) => {
 
 const toggleListed = async (row: any) => {
   try {
-    const res: any = await editCommodityUsingPost({ id: row.id, isListed: row.isListed });
+    const res: any = await editCommodityUsingPost({
+      id: row.id,
+      isListed: row.isListed
+    });
     if (res.code === 200) {
       ElMessage.success(row.isListed === 1 ? "已上架" : "已下架");
     } else {
@@ -248,7 +326,9 @@ const saveEdit = async () => {
       saving.value = true;
       const payload = {
         ...editForm.value,
-        commodityInventory: editIsRental.value ? 0 : editForm.value.commodityInventory
+        commodityInventory: editIsRental.value
+          ? 0
+          : editForm.value.commodityInventory
       };
       const res: any = await editCommodityUsingPost(payload);
       if (res.code === 200) {
@@ -286,7 +366,10 @@ const goAccount = () => {
 
 const initData = async () => {
   await load();
-  const typeRes: any = await listCommodityTypeVoByPageUsingPost({ current: 1, pageSize: 1000 });
+  const typeRes: any = await listCommodityTypeVoByPageUsingPost({
+    current: 1,
+    pageSize: 1000
+  });
   if (typeRes.code === 200) {
     commodityTypeList.value = typeRes.data.records || [];
   }
@@ -317,10 +400,30 @@ watch(allowPublish, async (val, oldVal) => {
 </script>
 
 <style scoped lang="scss">
-.mine-page { padding: 16px; }
-.header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.sub { margin: 2px 0 0 0; color: #888; font-size: 12px; }
-.pager { margin-top: 12px; text-align: right; }
-.mb16 { margin-bottom: 16px; }
-.price-unit { margin-left: 4px; color: #909399; font-size: 12px; }
+.mine-page {
+  padding: 16px;
+}
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.sub {
+  margin: 2px 0 0 0;
+  color: #888;
+  font-size: 12px;
+}
+.pager {
+  margin-top: 12px;
+  text-align: right;
+}
+.mb16 {
+  margin-bottom: 16px;
+}
+.price-unit {
+  margin-left: 4px;
+  color: #909399;
+  font-size: 12px;
+}
 </style>

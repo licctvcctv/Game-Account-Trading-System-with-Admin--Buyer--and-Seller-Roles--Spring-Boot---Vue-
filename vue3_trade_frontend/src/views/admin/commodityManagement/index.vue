@@ -20,14 +20,6 @@
           </el-form-item>
         </el-col>
         <el-col :span="6">
-          <el-form-item label="新旧程度">
-            <el-input
-              v-model="queryParams.degree"
-              placeholder="请输入新旧程度"
-            />
-          </el-form-item>
-        </el-col>
-        <el-col :span="6">
           <el-form-item label="账号分类ID">
             <el-input
               v-model="queryParams.commodityTypeId"
@@ -74,7 +66,6 @@
             <el-image :src="row.commodityAvatar" style="width: 64px" />
           </template>
         </el-table-column>
-        <el-table-column prop="degree" label="新旧程度" />
         <el-table-column
           prop="commodityTypeId"
           label="账号分类ID"
@@ -156,9 +147,6 @@
             :preview-src-list="[editForm.commodityAvatar]"
           />
         </el-form-item>
-        <el-form-item label="新旧程度" prop="degree">
-          <el-input v-model="editForm.degree" />
-        </el-form-item>
         <el-form-item label="账号分类" prop="commodityTypeId">
           <el-select
             v-model="editForm.commodityTypeId"
@@ -224,9 +212,6 @@
             style="width: 128px; height: 128px; margin-top: 10px"
             :preview-src-list="[addForm.commodityAvatar]"
           />
-        </el-form-item>
-        <el-form-item label="新旧程度" prop="degree">
-          <el-input v-model="addForm.degree" />
         </el-form-item>
         <el-form-item label="账号分类" prop="commodityTypeId">
           <el-select
@@ -299,7 +284,6 @@ import { listCommodityTypeVoByPageUsingPost } from "@/api/commodityTypeControlle
 const queryParams = ref({
   commodityName: "",
   commodityDescription: "",
-  degree: "",
   commodityTypeId: "",
   isListed: ""
 });
@@ -331,7 +315,6 @@ const editForm = ref({
   id: 0,
   commodityName: "",
   commodityDescription: "",
-  degree: "",
   commodityTypeId: "",
   isListed: 0,
   price: 0,
@@ -343,7 +326,6 @@ const editForm = ref({
 const addForm = ref({
   commodityName: "",
   commodityDescription: "",
-  degree: "",
   commodityTypeId: "",
   isListed: 0,
   price: 0,
@@ -386,7 +368,7 @@ const getCommodityTypeList = async () => {
       ElMessage.error("获取账号分类列表失败");
     }
   } catch (error) {
-      ElMessage.error("获取账号分类列表失败");
+    ElMessage.error("获取账号分类列表失败");
   }
 };
 
@@ -395,7 +377,6 @@ const resetQuery = () => {
   queryParams.value = {
     commodityName: "",
     commodityDescription: "",
-    degree: "",
     commodityTypeId: "",
     isListed: ""
   };
@@ -479,7 +460,6 @@ const addDialogClosed = () => {
   addForm.value = {
     commodityName: "",
     commodityDescription: "",
-    degree: "",
     commodityTypeId: "",
     isListed: 0,
     price: 0,

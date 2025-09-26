@@ -137,6 +137,54 @@ export async function listMyCommodityOrderVoByPageUsingPost(
   );
 }
 
+/** listMySellCommodityOrderVOByPage POST /api/commodityOrder/my/sell/list/page/vo */
+export async function listMySellCommodityOrderVoByPageUsingPost(
+  body: API.CommodityOrderQueryRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponsePageCommodityOrderVO_>(
+    "/api/commodityOrder/my/sell/list/page/vo",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      data: body,
+      ...(options || {})
+    }
+  );
+}
+
+/** deliverCommodityOrder POST /api/commodityOrder/deliver */
+export async function deliverCommodityOrderUsingPost(
+  body: API.CommodityOrderDeliverRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>("/api/commodityOrder/deliver", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    data: body,
+    ...(options || {})
+  });
+}
+
+/** confirmCommodityOrder POST /api/commodityOrder/confirm */
+export async function confirmCommodityOrderUsingPost(
+  body: API.CommodityOrderFinishRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>("/api/commodityOrder/confirm", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    data: body,
+    ...(options || {})
+  });
+}
+
 /** updateCommodityOrder POST /api/commodityOrder/update */
 export async function updateCommodityOrderUsingPost(
   body: API.CommodityOrderUpdateRequest,

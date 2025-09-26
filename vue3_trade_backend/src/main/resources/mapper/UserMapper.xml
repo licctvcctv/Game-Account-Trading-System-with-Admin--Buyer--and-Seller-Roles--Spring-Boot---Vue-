@@ -8,8 +8,6 @@
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="userAccount" column="userAccount" jdbcType="VARCHAR"/>
             <result property="userPassword" column="userPassword" jdbcType="VARCHAR"/>
-            <result property="unionId" column="unionId" jdbcType="VARCHAR"/>
-            <result property="mpOpenId" column="mpOpenId" jdbcType="VARCHAR"/>
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
             <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
             <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
@@ -23,7 +21,6 @@
         <result property="sellApplyStatus" column="sellApplyStatus" jdbcType="TINYINT"/>
         <result property="rentApplyStatus" column="rentApplyStatus" jdbcType="TINYINT"/>
         <result property="aiRemainNumber" column="aiRemainNumber" jdbcType="INTEGER"/>
-            <result property="editTime" column="editTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
@@ -31,11 +28,11 @@
 
     <sql id="Base_Column_List">
         id,userAccount,userPassword,
-        unionId,mpOpenId,userName,
+        userName,
         userAvatar,userProfile,userRole,userPhone,realName,idCardNumber,balance,
         sellPermission,rentPermission,sellApplyStatus,rentApplyStatus,
         aiRemainNumber,
-        editTime,createTime,updateTime,
+        createTime,updateTime,
         isDelete
     </sql>
     <select id="selectByIdWithLock" resultType="com.xiaobaitiao.springbootinit.model.entity.User">

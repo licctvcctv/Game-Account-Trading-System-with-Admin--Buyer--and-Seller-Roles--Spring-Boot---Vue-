@@ -6,10 +6,60 @@
       class="order-item"
     >
       <div class="order-header">
-        <span class="order-id">订单号：{{ order.id }}</span>
-        <el-tag :type="getPayStatusTagType(order.payStatus)">
-          {{ getPayStatusText(order.payStatus) }}
-        </el-tag>
+        <div class="order-title">
+          <span class="order-id">订单号：{{ order.id }}</span>
+          <el-tag :type="getPayStatusTagType(order.payStatus)" size="small">
+            {{ getPayStatusText(order.payStatus) }}
+          </el-tag>
+          <el-tag
+            v-if="order.deliveryStatus !== undefined"
+            :type="order.deliveryStatus === 1 ? 'success' : 'info'"
+            size="small"
+            style="margin-left: 8px"
+          >
+            {{ order.deliveryStatus === 1 ? "已发货" : "未发货" }}
+          </el-tag>
+          <el-tag
+            v-if="order.finishStatus !== undefined"
+            :type="order.finishStatus === 1 ? 'success' : 'warning'"
+            size="small"
+            style="margin-left: 8px"
+          >
+            {{ order.finishStatus === 1 ? "已完成" : "待确认" }}
+          </el-tag>
+        </div>
+        <div class="order-actions">
+          <el-button
+            v-if="props.mode === 'buyer' && order.payStatus === 0"
+            type="primary"
+            @click="showPayDialog(order)"
+          >
+            支付
+          </el-button>
+          <el-button
+            v-if="
+              props.mode === 'seller' &&
+              order.payStatus === 1 &&
+              order.deliveryStatus !== 1
+            "
+            type="primary"
+            @click="showDeliverDialog(order)"
+          >
+            发货
+          </el-button>
+          <el-button
+            v-if="
+              props.mode === 'buyer' &&
+              order.payStatus === 1 &&
+              order.deliveryStatus === 1 &&
+              order.finishStatus !== 1
+            "
+            type="success"
+            @click="confirmReceipt(order)"
+          >
+            确认收货
+          </el-button>
+        </div>
       </div>
 
       <el-divider />
@@ -25,7 +75,9 @@
         </div>
         <div class="order-field">
           <span class="field-label">支付金额：</span>
-          <span class="field-value">{{ order.paymentAmount }} 元</span>
+          <span class="field-value">{{
+            formatPrice(order.paymentAmount)
+          }}</span>
         </div>
         <div class="order-field">
           <span class="field-label">联系人：</span>
@@ -35,35 +87,73 @@
           <span class="field-label">联系电话：</span>
           <span class="field-value">{{ order.userPhone }}</span>
         </div>
+        <div
+          class="order-field"
+          v-if="props.mode === 'buyer' && order.sellerName"
+        >
+          <span class="field-label">卖家：</span>
+          <span class="field-value">{{ order.sellerName }}</span>
+        </div>
         <div class="order-field">
           <span class="field-label">创建时间：</span>
           <span class="field-value">{{ formatTime(order.createTime) }}</span>
         </div>
-        <!-- 倒计时 -->
-        <div class="order-field" v-if="order.payStatus === 0">
-          <span class="field-label">剩余支付时间：</span>
-          <span class="field-value">{{
-            remainingTimes[order.id] || "计算中..."
+        <div class="order-field" v-if="order.deliverTime">
+          <span class="field-label">发货时间：</span>
+          <span class="field-value">{{ formatTime(order.deliverTime) }}</span>
+        </div>
+        <div class="order-field" v-if="order.finishTime">
+          <span class="field-label">完成时间：</span>
+          <span class="field-value">{{ formatTime(order.finishTime) }}</span>
+        </div>
+        <div
+          class="order-field"
+          v-if="order.deliveryContent && order.deliveryContent.length > 0"
+        >
+          <span class="field-label">发货内容：</span>
+          <span class="field-value delivery-content">{{
+            order.deliveryContent
           }}</span>
         </div>
-      </div>
-
-      <!-- 支付按钮 -->
-      <div v-if="order.payStatus === 0" class="order-footer">
-        <el-button type="primary" @click="showPayDialog(order)">支付</el-button>
+        <div class="order-field" v-if="order.payStatus === 0">
+          <span class="field-label">剩余支付时间：</span>
+          <span class="field-value">
+            {{ remainingTimes[order.id] || "计算中..." }}
+          </span>
+        </div>
       </div>
     </el-card>
 
-    <!-- 支付对话框 -->
-    <el-dialog v-model="dialogVisible" title="支付订单" width="30%">
+    <el-dialog v-model="payDialogVisible" title="支付订单" width="360px">
       <div class="dialog-content">
         <p>订单号：{{ currentOrder?.id }}</p>
         <p>账号名称：{{ currentOrder?.commodityName }}</p>
-        <p>支付金额：{{ currentOrder?.paymentAmount }} 元</p>
+        <p>支付金额：{{ formatPrice(currentOrder?.paymentAmount) }}</p>
       </div>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="payDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="confirmPay">确定支付</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog
+      v-model="deliverDialogVisible"
+      title="填写发货信息"
+      width="420px"
+    >
+      <el-form :model="deliverForm" label-width="90px">
+        <el-form-item label="发货内容" required>
+          <el-input
+            v-model="deliverForm.deliveryContent"
+            type="textarea"
+            rows="4"
+            placeholder="请输入账号、卡密或其他发货信息"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="deliverDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmDeliver">提交</el-button>
       </template>
     </el-dialog>
   </div>
@@ -71,59 +161,97 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch } from "vue";
-import { ElCard, ElTag, ElDivider, ElButton, ElDialog } from "element-plus";
+import {
+  ElCard,
+  ElTag,
+  ElDivider,
+  ElButton,
+  ElDialog,
+  ElForm,
+  ElFormItem,
+  ElInput
+} from "element-plus";
 import dayjs from "dayjs";
 
-// 定义 props
 const props = defineProps({
   commodityOrderList: {
     type: Array,
     required: true
+  },
+  mode: {
+    type: String,
+    default: "buyer"
   }
 });
 
-// 定义 emit
-const emit = defineEmits(["pay"]);
+const emit = defineEmits(["pay", "deliver", "confirm"]);
 
-// 对话框状态
-const dialogVisible = ref(false);
-const currentOrder = ref(null);
+const payDialogVisible = ref(false);
+const currentOrder = ref<any>(null);
 
-// 剩余时间存储
+const deliverDialogVisible = ref(false);
+const currentDeliverOrder = ref<any>(null);
+const deliverForm = ref<{ deliveryContent: string }>({ deliveryContent: "" });
+
 const remainingTimes = ref<Record<number, string>>({});
 
-// 显示支付对话框
-const showPayDialog = (order) => {
+const showPayDialog = (order: any) => {
   currentOrder.value = order;
-  dialogVisible.value = true;
+  payDialogVisible.value = true;
 };
 
-// 确认支付
 const confirmPay = () => {
   if (currentOrder.value) {
     emit("pay", currentOrder.value.id);
-    dialogVisible.value = false;
+    payDialogVisible.value = false;
   }
 };
 
-// 格式化时间
+const showDeliverDialog = (order: any) => {
+  currentDeliverOrder.value = order;
+  deliverForm.value.deliveryContent = "";
+  deliverDialogVisible.value = true;
+};
+
+const confirmDeliver = () => {
+  if (!currentDeliverOrder.value) {
+    return;
+  }
+  const content = deliverForm.value.deliveryContent?.trim();
+  if (!content) {
+    return;
+  }
+  emit("deliver", {
+    id: currentDeliverOrder.value.id,
+    deliveryContent: content
+  });
+  deliverDialogVisible.value = false;
+};
+
+const confirmReceipt = (order: any) => {
+  emit("confirm", order.id);
+};
+
 const formatTime = (time?: string) => {
   return time ? dayjs(time).format("YYYY-MM-DD HH:mm") : "未知时间";
 };
 
-// 获取支付状态对应的标签类型
+const formatPrice = (amount?: number | string) => {
+  const value = Number(amount ?? 0);
+  return `¥${value.toFixed(2)}`;
+};
+
 const getPayStatusTagType = (payStatus?: number) => {
   switch (payStatus) {
     case 1:
-      return "success"; // 支付成功
+      return "success";
     case 0:
-      return "danger"; // 未支付
+      return "danger";
     default:
-      return "info"; // 其他状态
+      return "info";
   }
 };
 
-// 获取支付状态对应的文本
 const getPayStatusText = (payStatus?: number) => {
   switch (payStatus) {
     case 1:
@@ -135,11 +263,10 @@ const getPayStatusText = (payStatus?: number) => {
   }
 };
 
-// 计算剩余时间
 const getRemainingTime = (createTime: string) => {
   const now = dayjs();
   const create = dayjs(createTime);
-  const expireTime = create.add(15, "minute"); // 假设订单有效期为 15 分钟
+  const expireTime = create.add(15, "minute");
   const diff = expireTime.diff(now, "second");
 
   if (diff <= 0) {
@@ -151,37 +278,33 @@ const getRemainingTime = (createTime: string) => {
   return `${minutes} 分 ${seconds} 秒`;
 };
 
-// 动态更新倒计时
 const updateRemainingTimes = () => {
-  props.commodityOrderList.forEach((order) => {
-    if (order.payStatus === 0) {
+  props.commodityOrderList.forEach((order: any) => {
+    if (order.payStatus === 0 && order.createTime) {
       remainingTimes.value[order.id] = getRemainingTime(order.createTime);
     }
   });
 };
 
-// 定时器
 let timer: number | null = null;
 
-// 组件挂载时启动定时器
 onMounted(() => {
-  timer = setInterval(updateRemainingTimes, 1000); // 每秒更新一次
+  timer = window.setInterval(updateRemainingTimes, 1000);
+  updateRemainingTimes();
 });
 
-// 组件卸载时清除定时器
 onUnmounted(() => {
   if (timer) {
     clearInterval(timer);
   }
 });
 
-// 监听订单列表变化
 watch(
   () => props.commodityOrderList,
   () => {
     updateRemainingTimes();
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 );
 </script>
 
@@ -209,6 +332,12 @@ watch(
   align-items: center;
   padding: 12px 16px;
 
+  .order-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   .order-id {
     font-size: 16px;
     font-weight: bold;
@@ -227,20 +356,24 @@ watch(
     .field-label {
       font-size: 14px;
       color: #666;
-      min-width: 80px;
+      min-width: 90px;
     }
 
     .field-value {
       font-size: 14px;
       color: #333;
     }
+
+    .delivery-content {
+      word-break: break-all;
+      white-space: pre-wrap;
+    }
   }
 }
 
-.order-footer {
+.order-actions {
   display: flex;
-  justify-content: flex-end;
-  padding: 12px 16px;
+  gap: 8px;
 }
 
 .dialog-content {

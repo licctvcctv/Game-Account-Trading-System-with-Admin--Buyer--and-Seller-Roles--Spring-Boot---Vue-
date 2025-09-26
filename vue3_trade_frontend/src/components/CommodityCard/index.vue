@@ -46,9 +46,11 @@
 
       <!-- 价格和库存 -->
       <p class="price-text">
-        {{ isRental
-          ? `时价：${commodity.price} 元/小时`
-          : `价格：${commodity.price} 元` }}
+        {{
+          isRental
+            ? `时价：${commodity.price} 元/小时`
+            : `价格：${commodity.price} 元`
+        }}
         <template v-if="!isRental">
           | 库存：{{ commodity.commodityInventory }}
         </template>
@@ -334,7 +336,9 @@ const recalcPaymentAmount = () => {
   if (isRental.value) {
     const duration = Math.max(1, buyForm.value.rentalDuration || 0);
     const unitFactor = buyForm.value.rentalUnit === "DAY" ? 24 : 1;
-    buyForm.value.paymentAmount = Number((duration * unitFactor * price).toFixed(2));
+    buyForm.value.paymentAmount = Number(
+      (duration * unitFactor * price).toFixed(2)
+    );
   } else {
     const quantity = Math.max(1, buyForm.value.buyNumber || 1);
     buyForm.value.paymentAmount = Number((quantity * price).toFixed(2));

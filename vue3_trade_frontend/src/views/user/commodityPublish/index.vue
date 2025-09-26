@@ -6,7 +6,11 @@
           <h2>发布账号</h2>
           <p>填写信息并上传封面，支持立即上架或先保存草稿。</p>
         </div>
-        <img class="hero-ill" src="https://pic.yupi.icu/5563/202503151527812.png" alt="illustration" />
+        <img
+          class="hero-ill"
+          src="https://pic.yupi.icu/5563/202503151527812.png"
+          alt="illustration"
+        />
       </div>
     </el-card>
 
@@ -19,17 +23,38 @@
         show-icon
         class="mb16"
       />
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="100px" :disabled="!allowPublish">
+      <el-form
+        ref="formRef"
+        :model="form"
+        :rules="rules"
+        label-width="100px"
+        :disabled="!allowPublish"
+      >
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="账号名称" prop="commodityName">
-              <el-input v-model="form.commodityName" maxlength="60" show-word-limit placeholder="请输入账号名称" />
+              <el-input
+                v-model="form.commodityName"
+                maxlength="60"
+                show-word-limit
+                placeholder="请输入账号名称"
+              />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="账号分类" prop="commodityTypeId">
-              <el-select v-model="form.commodityTypeId" filterable clearable placeholder="请选择分类">
-                <el-option v-for="t in commodityTypeList" :key="t.id" :label="t.typeName" :value="t.id" />
+              <el-select
+                v-model="form.commodityTypeId"
+                filterable
+                clearable
+                placeholder="请选择分类"
+              >
+                <el-option
+                  v-for="t in commodityTypeList"
+                  :key="t.id"
+                  :label="t.typeName"
+                  :value="t.id"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -50,7 +75,12 @@
           <el-col :span="8">
             <el-form-item label="交易类型" prop="tradeType">
               <el-select v-model="form.tradeType" placeholder="请选择交易类型">
-                <el-option v-for="opt in tradeTypeOptions" :key="opt.value" :label="opt.label" :value="opt.value" />
+                <el-option
+                  v-for="opt in tradeTypeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -64,7 +94,10 @@
           </el-col>
           <el-col v-if="!isRental" :span="8">
             <el-form-item label="库存" prop="commodityInventory">
-              <el-input v-model.number="form.commodityInventory" placeholder="请输入库存数量" />
+              <el-input
+                v-model.number="form.commodityInventory"
+                placeholder="请输入库存数量"
+              />
             </el-form-item>
           </el-col>
 
@@ -76,7 +109,11 @@
                 :before-upload="beforeUpload"
                 :http-request="doUpload"
               >
-                <img v-if="form.commodityAvatar" :src="form.commodityAvatar" class="avatar" />
+                <img
+                  v-if="form.commodityAvatar"
+                  :src="form.commodityAvatar"
+                  class="avatar"
+                />
                 <div v-else class="upload-placeholder">
                   <el-icon><Picture /></el-icon>
                   <span>点击上传</span>
@@ -86,19 +123,28 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="是否上架">
-              <el-switch v-model="form.isListed" :active-value="1" :inactive-value="0" />
+              <el-switch
+                v-model="form.isListed"
+                :active-value="1"
+                :inactive-value="0"
+              />
             </el-form-item>
           </el-col>
         </el-row>
 
         <div class="actions">
           <el-button @click="reset">重置</el-button>
-          <el-button type="primary" :loading="submitting" :disabled="!allowPublish" @click="submit">发布</el-button>
+          <el-button
+            type="primary"
+            :loading="submitting"
+            :disabled="!allowPublish"
+            @click="submit"
+            >发布</el-button
+          >
         </div>
       </el-form>
     </el-card>
   </div>
-  
 </template>
 
 <script setup lang="ts">
@@ -119,7 +165,11 @@ const router = useRouter();
 const commodityTypeList = ref<TypeItem[]>([]);
 const userStore = useUserStore();
 
-const allowPublish = computed(() => (userStore.sellPermission ?? 0) === 1 || (userStore.rentPermission ?? 0) === 1);
+const allowPublish = computed(
+  () =>
+    (userStore.sellPermission ?? 0) === 1 ||
+    (userStore.rentPermission ?? 0) === 1
+);
 
 const tradeTypeOptions = computed(() => {
   const options: { label: string; value: number }[] = [];
@@ -144,7 +194,9 @@ const form = ref({
 });
 
 const isRental = computed(() => form.value.tradeType === 2);
-const priceLabel = computed(() => (isRental.value ? "时价(元/小时)" : "价格(元)"));
+const priceLabel = computed(() =>
+  isRental.value ? "时价(元/小时)" : "价格(元)"
+);
 
 const validateInventory = (_rule: any, value: any, callback: any) => {
   if (isRental.value) {
@@ -159,15 +211,22 @@ const validateInventory = (_rule: any, value: any, callback: any) => {
 };
 
 const rules = {
-  commodityName: [{ required: true, message: "请输入账号名称", trigger: "blur" }],
-  commodityTypeId: [{ required: true, message: "请选择分类", trigger: "change" }],
+  commodityName: [
+    { required: true, message: "请输入账号名称", trigger: "blur" }
+  ],
+  commodityTypeId: [
+    { required: true, message: "请选择分类", trigger: "change" }
+  ],
   price: [{ required: true, message: "请输入价格", trigger: "blur" }],
   commodityInventory: [{ validator: validateInventory, trigger: "blur" }],
   tradeType: [{ required: true, message: "请选择交易类型", trigger: "change" }]
 };
 
 const loadTypes = async () => {
-  const res: any = await listCommodityTypeVoByPageUsingPost({ current: 1, pageSize: 1000 });
+  const res: any = await listCommodityTypeVoByPageUsingPost({
+    current: 1,
+    pageSize: 1000
+  });
   if (res.code === 200) {
     commodityTypeList.value = res.data.records || [];
   }
@@ -175,7 +234,10 @@ const loadTypes = async () => {
 
 const initData = async () => {
   await loadTypes();
-  if (tradeTypeOptions.value.length > 0 && !tradeTypeOptions.value.find((item) => item.value === form.value.tradeType)) {
+  if (
+    tradeTypeOptions.value.length > 0 &&
+    !tradeTypeOptions.value.find((item) => item.value === form.value.tradeType)
+  ) {
     form.value.tradeType = tradeTypeOptions.value[0].value;
   }
 };
@@ -191,7 +253,10 @@ onMounted(async () => {
 watch(
   tradeTypeOptions,
   (options) => {
-    if (options.length > 0 && !options.find((item) => item.value === form.value.tradeType)) {
+    if (
+      options.length > 0 &&
+      !options.find((item) => item.value === form.value.tradeType)
+    ) {
       form.value.tradeType = options[0].value;
     }
   },
@@ -203,7 +268,10 @@ watch(
   (type) => {
     if (type === 2) {
       form.value.commodityInventory = 0;
-    } else if (form.value.commodityInventory === undefined || form.value.commodityInventory <= 0) {
+    } else if (
+      form.value.commodityInventory === undefined ||
+      form.value.commodityInventory <= 0
+    ) {
       form.value.commodityInventory = 1;
     }
   }
@@ -216,7 +284,9 @@ watch(allowPublish, async (val, oldVal) => {
 });
 
 const beforeUpload = (file: File) => {
-  const isImage = /^image\/(jpeg|png|webp|svg\+xml)$/.test(file.type) || file.type === "image/svg+xml";
+  const isImage =
+    /^image\/(jpeg|png|webp|svg\+xml)$/.test(file.type) ||
+    file.type === "image/svg+xml";
   const isLt1M = file.size / 1024 / 1024 < 1.0;
   if (!isImage) {
     ElMessage.error("只能上传图片类型");
@@ -232,7 +302,11 @@ const beforeUpload = (file: File) => {
 const doUpload = async (options: any) => {
   try {
     const file: File = options.file;
-    const res: any = await uploadFileUsingPost({ biz: "user_avatar" }, {}, file);
+    const res: any = await uploadFileUsingPost(
+      { biz: "user_avatar" },
+      {},
+      file
+    );
     if (res.code === 200) {
       form.value.commodityAvatar = res.data;
       ElMessage.success("上传成功");

@@ -11,6 +11,8 @@ import com.xiaobaitiao.springbootinit.constant.UserConstant;
 import com.xiaobaitiao.springbootinit.exception.BusinessException;
 import com.xiaobaitiao.springbootinit.exception.ThrowUtils;
 import com.xiaobaitiao.springbootinit.model.dto.commodity.*;
+import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderDeliverRequest;
+import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderFinishRequest;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderQueryRequest;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.PayCommodityOrderRequest;
 import com.xiaobaitiao.springbootinit.model.entity.Commodity;
@@ -335,6 +337,9 @@ public class CommodityController {
         CommodityOrder order = new CommodityOrder();
         order.setUserId(loginUser.getId());
         order.setCommodityId(buyRequest.getCommodityId());
+        order.setSellerId(commodity.getAdminId());
+        order.setDeliveryStatus(0);
+        order.setFinishStatus(0);
         order.setBuyNumber(tradeType == 1 ? purchaseNumber : 1);
         order.setPaymentAmount(totalAmount);
         order.setRemark(buyRequest.getRemark());
@@ -436,6 +441,9 @@ public class CommodityController {
         Commodity commodity = commodityService.getByIdWithLock(order.getCommodityId());
         if (commodity == null || commodity.getIsDelete() == 1) {
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR, "商品不存在");
+        }
+        if (order.getSellerId() == null) {
+            order.setSellerId(commodity.getAdminId());
         }
 
         Integer tradeType = order.getTradeType() == null ? 1 : order.getTradeType();

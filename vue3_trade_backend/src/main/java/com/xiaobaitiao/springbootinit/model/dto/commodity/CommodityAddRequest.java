@@ -4,8 +4,6 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
 
 /**
  * 创建商品表请求
@@ -29,11 +27,6 @@ public class CommodityAddRequest implements Serializable {
      * 商品封面图
      */
     private String commodityAvatar;
-
-    /**
-     * 商品新旧程度（例如 9成新）
-     */
-    private String degree;
 
     /**
      * 商品分类 ID

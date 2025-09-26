@@ -1,6 +1,5 @@
 package com.xiaobaitiao.springbootinit.service.impl;
 
-
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -8,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xiaobaitiao.springbootinit.common.ErrorCode;
 import com.xiaobaitiao.springbootinit.constant.CommonConstant;
+import com.xiaobaitiao.springbootinit.exception.BusinessException;
 import com.xiaobaitiao.springbootinit.exception.ThrowUtils;
 import com.xiaobaitiao.springbootinit.mapper.CommodityOrderMapper;
 import com.xiaobaitiao.springbootinit.model.dto.commodityOrder.CommodityOrderQueryRequest;
@@ -19,23 +19,22 @@ import com.xiaobaitiao.springbootinit.service.CommodityOrderService;
 import com.xiaobaitiao.springbootinit.service.CommodityService;
 import com.xiaobaitiao.springbootinit.service.UserService;
 import com.xiaobaitiao.springbootinit.utils.SqlUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 商品订单表服务实现
- *
- * 
- * 
  */
 @Service
 @Slf4j
@@ -45,16 +44,10 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
     private UserService userService;
     @Resource
     private CommodityService commodityService;
-    /**
-     * 校验数据
-     *
-     * @param commodityOrder
-     * @param add            对创建的数据进行校验
-     */
+
     @Override
     public void validCommodityOrder(CommodityOrder commodityOrder, boolean add) {
         ThrowUtils.throwIf(commodityOrder == null, ErrorCode.PARAMS_ERROR);
-        // todo 从对象中取值
         Long userId = commodityOrder.getUserId();
         Long commodityId = commodityOrder.getCommodityId();
         Integer buyNumber = commodityOrder.getBuyNumber();
@@ -62,7 +55,6 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         Integer tradeType = commodityOrder.getTradeType();
         String rentalUnit = commodityOrder.getRentalUnit();
 
-        // 创建数据时，参数不能为空
         if (add) {
             ThrowUtils.throwIf(userId == null || userId <= 0, ErrorCode.PARAMS_ERROR);
             ThrowUtils.throwIf(commodityId == null || commodityId <= 0, ErrorCode.PARAMS_ERROR);
@@ -83,15 +75,8 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         if (StringUtils.isNotBlank(rentalUnit)) {
             ThrowUtils.throwIf(rentalUnit.length() > 16, ErrorCode.PARAMS_ERROR);
         }
-
     }
 
-    /**
-     * 获取查询条件
-     *
-     * @param commodityOrderQueryRequest
-     * @return
-     */
     @Override
     public QueryWrapper<CommodityOrder> getQueryWrapper(CommodityOrderQueryRequest commodityOrderQueryRequest) {
         QueryWrapper<CommodityOrder> queryWrapper = new QueryWrapper<>();
@@ -100,6 +85,7 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         }
         Long id = commodityOrderQueryRequest.getId();
         Long userId = commodityOrderQueryRequest.getUserId();
+        Long sellerId = commodityOrderQueryRequest.getSellerId();
         Long commodityId = commodityOrderQueryRequest.getCommodityId();
         String remark = commodityOrderQueryRequest.getRemark();
         Integer buyNumber = commodityOrderQueryRequest.getBuyNumber();
@@ -107,11 +93,12 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         String rentalUnit = commodityOrderQueryRequest.getRentalUnit();
         Integer tradeType = commodityOrderQueryRequest.getTradeType();
         Integer payStatus = commodityOrderQueryRequest.getPayStatus();
+        Integer deliveryStatus = commodityOrderQueryRequest.getDeliveryStatus();
+        Integer finishStatus = commodityOrderQueryRequest.getFinishStatus();
         String sortField = commodityOrderQueryRequest.getSortField();
         String sortOrder = commodityOrderQueryRequest.getSortOrder();
-        // 模糊查询
+
         queryWrapper.like(StringUtils.isNotBlank(remark), "remark", remark);
-        // 精确查询
         queryWrapper.eq(ObjectUtils.isNotEmpty(payStatus), "payStatus", payStatus);
         queryWrapper.eq(ObjectUtils.isNotEmpty(buyNumber), "buyNumber", buyNumber);
         queryWrapper.eq(ObjectUtils.isNotEmpty(rentalDuration), "rentalDuration", rentalDuration);
@@ -120,43 +107,43 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         queryWrapper.eq(ObjectUtils.isNotEmpty(commodityId), "commodityId", commodityId);
         queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
         queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
-        // 排序规则
-        queryWrapper.orderBy(SqlUtils.validSortField(sortField),
-                sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
-                sortField);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(sellerId), "sellerId", sellerId);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(deliveryStatus), "deliveryStatus", deliveryStatus);
+        queryWrapper.eq(ObjectUtils.isNotEmpty(finishStatus), "finishStatus", finishStatus);
+
+        if (SqlUtils.validSortField(sortField)) {
+            boolean isAsc = StringUtils.equals(sortOrder, CommonConstant.SORT_ORDER_ASC);
+            queryWrapper.orderBy(true, isAsc, sortField);
+        } else {
+            queryWrapper.orderByDesc("createTime");
+        }
         return queryWrapper;
     }
 
-    /**
-     * 获取商品订单表封装
-     *
-     * @param commodityOrder
-     * @param request
-     * @return
-     */
     @Override
     public CommodityOrderVO getCommodityOrderVO(CommodityOrder commodityOrder, HttpServletRequest request) {
-        // 对象转封装类
         CommodityOrderVO commodityOrderVO = CommodityOrderVO.objToVo(commodityOrder);
-
-        // todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-        // region 可选
-        // 1. 关联查询用户信息
+        if (commodityOrderVO == null) {
+            return null;
+        }
         Long userId = commodityOrder.getUserId();
-        User user = userService.getById(userId);
-        commodityOrderVO.setUserName(user.getUserName());
-        commodityOrderVO.setUserPhone(user.getUserPhone());
-
+        if (userId != null) {
+            User user = userService.getById(userId);
+            if (user != null) {
+                commodityOrderVO.setUserName(user.getUserName());
+                commodityOrderVO.setUserPhone(user.getUserPhone());
+            }
+        }
+        Long sellerId = commodityOrder.getSellerId();
+        if (sellerId != null) {
+            User seller = userService.getById(sellerId);
+            if (seller != null) {
+                commodityOrderVO.setSellerName(seller.getUserName());
+            }
+        }
         return commodityOrderVO;
     }
 
-    /**
-     * 分页获取商品订单表封装
-     *
-     * @param commodityOrderPage
-     * @param request
-     * @return
-     */
     @Override
     public Page<CommodityOrderVO> getCommodityOrderVOPage(Page<CommodityOrder> commodityOrderPage, HttpServletRequest request) {
         List<CommodityOrder> commodityOrderList = commodityOrderPage.getRecords();
@@ -164,44 +151,49 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
         if (CollUtil.isEmpty(commodityOrderList)) {
             return commodityOrderVOPage;
         }
-
-        // 对象列表 => 封装对象列表
         List<CommodityOrderVO> commodityOrderVOList = commodityOrderList.stream()
                 .map(CommodityOrderVO::objToVo)
                 .collect(Collectors.toList());
 
-        // 关联查询用户信息
         Set<Long> userIdSet = commodityOrderList.stream()
                 .map(CommodityOrder::getUserId)
                 .collect(Collectors.toSet());
-        // 关联查询商品信息
+        Set<Long> sellerIdSet = commodityOrderList.stream()
+                .map(CommodityOrder::getSellerId)
+                .filter(ObjectUtils::isNotEmpty)
+                .collect(Collectors.toSet());
         Set<Long> commodityIdSet = commodityOrderList.stream()
                 .map(CommodityOrder::getCommodityId)
                 .collect(Collectors.toSet());
-        // 批量查询用户信息
+
         Map<Long, User> userIdUserMap = userService.listByIds(userIdSet).stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
-        // 批量查询商品信息
+        Map<Long, User> sellerIdUserMap = sellerIdSet.isEmpty() ? Collections.emptyMap()
+                : userService.listByIds(sellerIdSet).stream().collect(Collectors.toMap(User::getId, user -> user));
         Map<Long, Commodity> commodityIdMap = commodityService.listByIds(commodityIdSet).stream()
                 .collect(Collectors.toMap(Commodity::getId, commodity -> commodity));
-        // 填充用户信息到 VO 对象
-        commodityOrderVOList.forEach(commodityOrderVO -> {
-            User user = userIdUserMap.get(commodityOrderVO.getUserId());
-            if (user != null) {
-                commodityOrderVO.setUserName(user.getUserName());
-                commodityOrderVO.setUserPhone(user.getUserPhone());
+
+        commodityOrderVOList.forEach(vo -> {
+            User buyer = userIdUserMap.get(vo.getUserId());
+            if (buyer != null) {
+                vo.setUserName(buyer.getUserName());
+                vo.setUserPhone(buyer.getUserPhone());
             }
-        });
-        // 填充商品信息到 VO 对象
-        commodityOrderVOList.forEach(commodityOrderVO -> {
-            Commodity commodity = commodityIdMap.get(commodityOrderVO.getCommodityId());
+            if (vo.getSellerId() != null) {
+                User seller = sellerIdUserMap.get(vo.getSellerId());
+                if (seller != null) {
+                    vo.setSellerName(seller.getUserName());
+                }
+            }
+            Commodity commodity = commodityIdMap.get(vo.getCommodityId());
             if (commodity != null) {
-                commodityOrderVO.setCommodityName(commodity.getCommodityName());
+                vo.setCommodityName(commodity.getCommodityName());
             }
         });
         commodityOrderVOPage.setRecords(commodityOrderVOList);
         return commodityOrderVOPage;
     }
+
     @Override
     public CommodityOrder getByIdWithLock(Long id) {
         return baseMapper.selectOne(new LambdaQueryWrapper<CommodityOrder>()
@@ -211,13 +203,58 @@ public class CommodityOrderServiceImpl extends ServiceImpl<CommodityOrderMapper,
 
     @Override
     public List<CommodityOrder> listByQuery(CommodityOrderQueryRequest queryRequest) {
-        QueryWrapper<CommodityOrder> queryWrapper = new QueryWrapper<>();
-        if (queryRequest.getUserId() != null) {
-            queryWrapper.eq("userId", queryRequest.getUserId());
+        return this.list(getQueryWrapper(queryRequest));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deliverOrder(Long orderId, String deliveryContent, User seller) {
+        ThrowUtils.throwIf(orderId == null || orderId <= 0, ErrorCode.PARAMS_ERROR);
+        CommodityOrder order = getByIdWithLock(orderId);
+        ThrowUtils.throwIf(order == null, ErrorCode.NOT_FOUND_ERROR, "订单不存在");
+        ThrowUtils.throwIf(order.getSellerId() == null || !order.getSellerId().equals(seller.getId()),
+                ErrorCode.NO_AUTH_ERROR, "无权操作该订单");
+        ThrowUtils.throwIf(order.getPayStatus() == null || order.getPayStatus() != 1, ErrorCode.OPERATION_ERROR,
+                "订单未支付，无法发货");
+        ThrowUtils.throwIf(order.getDeliveryStatus() != null && order.getDeliveryStatus() == 1,
+                ErrorCode.OPERATION_ERROR, "订单已发货");
+        ThrowUtils.throwIf(StringUtils.isBlank(deliveryContent), ErrorCode.PARAMS_ERROR, "发货内容不能为空");
+        order.setDeliveryStatus(1);
+        order.setDeliveryContent(deliveryContent);
+        order.setDeliverTime(new Date());
+        boolean updated = this.updateById(order);
+        ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新订单发货信息失败");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void finishOrder(Long orderId, String reviewMessage, User buyer) {
+        ThrowUtils.throwIf(orderId == null || orderId <= 0, ErrorCode.PARAMS_ERROR);
+        CommodityOrder order = getByIdWithLock(orderId);
+        ThrowUtils.throwIf(order == null, ErrorCode.NOT_FOUND_ERROR, "订单不存在");
+        ThrowUtils.throwIf(order.getUserId() == null || !order.getUserId().equals(buyer.getId()),
+                ErrorCode.NO_AUTH_ERROR, "无权确认该订单");
+        ThrowUtils.throwIf(order.getPayStatus() == null || order.getPayStatus() != 1, ErrorCode.OPERATION_ERROR,
+                "订单未完成支付");
+        ThrowUtils.throwIf(order.getDeliveryStatus() == null || order.getDeliveryStatus() != 1,
+                ErrorCode.OPERATION_ERROR, "订单未发货");
+        if (order.getFinishStatus() != null && order.getFinishStatus() == 1) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "订单已完成");
         }
-        if (queryRequest.getPayStatus() != null) {
-            queryWrapper.eq("payStatus", queryRequest.getPayStatus());
+        order.setFinishStatus(1);
+        order.setFinishTime(new Date());
+        if (StringUtils.isNotBlank(reviewMessage)) {
+            order.setRemark(reviewMessage);
         }
-        return this.list(queryWrapper);
+        boolean updated = this.updateById(order);
+        ThrowUtils.throwIf(!updated, ErrorCode.OPERATION_ERROR, "更新订单状态失败");
+
+        if (order.getSellerId() != null && order.getPaymentAmount() != null) {
+            User seller = userService.getByIdWithLock(order.getSellerId());
+            ThrowUtils.throwIf(seller == null, ErrorCode.NOT_FOUND_ERROR, "卖家不存在");
+            seller.setBalance(seller.getBalance().add(order.getPaymentAmount()));
+            boolean sellerUpdated = userService.updateById(seller);
+            ThrowUtils.throwIf(!sellerUpdated, ErrorCode.OPERATION_ERROR, "更新卖家余额失败");
+        }
     }
 }

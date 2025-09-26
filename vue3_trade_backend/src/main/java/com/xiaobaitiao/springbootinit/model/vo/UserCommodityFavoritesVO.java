@@ -64,11 +64,6 @@ public class UserCommodityFavoritesVO implements Serializable {
     private String commodityAvatar;
 
     /**
-     * 商品新旧程度（例如 9成新）
-     */
-    private String degree;
-
-    /**
      * 商品分类 ID
      */
     private Long commodityTypeId;
@@ -164,7 +159,6 @@ public class UserCommodityFavoritesVO implements Serializable {
                 userCommodityFavoritesVO.setCommodityName(commodity.getCommodityName());
                 userCommodityFavoritesVO.setCommodityDescription(commodity.getCommodityDescription());
                 userCommodityFavoritesVO.setCommodityAvatar(commodity.getCommodityAvatar());
-                userCommodityFavoritesVO.setDegree(commodity.getDegree());
                 userCommodityFavoritesVO.setCommodityTypeId(commodity.getCommodityTypeId());
                 userCommodityFavoritesVO.setAdminId(commodity.getAdminId());
                 userCommodityFavoritesVO.setIsListed(commodity.getIsListed());

@@ -325,6 +325,13 @@ declare namespace API {
     message?: string;
   };
 
+  type BaseResponsePageUserRechargeRequestVO_ = {
+    code?: number;
+    data?: PageUserRechargeRequestVO_;
+    hashMap?: Record<string, any>;
+    message?: string;
+  };
+
   type BaseResponsePageUserVO_ = {
     code?: number;
     data?: PageUserVO_;
@@ -476,7 +483,6 @@ declare namespace API {
     commodityTypeId?: number;
     tradeType?: number;
     createTime?: string;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isDelete?: number;
@@ -497,7 +503,6 @@ declare namespace API {
     commodityName?: string;
     commodityTypeId?: number;
     tradeType?: number;
-    degree?: string;
     favourNum?: number;
     isListed?: number;
     price?: number;
@@ -512,7 +517,6 @@ declare namespace API {
     commodityName?: string;
     commodityTypeId?: number;
     tradeType?: number;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isListed?: number;
@@ -524,6 +528,11 @@ declare namespace API {
     buyNumber?: number;
     commodityId?: number;
     createTime?: string;
+    deliveryContent?: string;
+    deliveryStatus?: number;
+    deliverTime?: string;
+    finishStatus?: number;
+    finishTime?: string;
     id?: number;
     isDelete?: number;
     payStatus?: number;
@@ -533,6 +542,7 @@ declare namespace API {
     rentalUnit?: string;
     rentEndTime?: string;
     rentStartTime?: string;
+    sellerId?: number;
     tradeType?: number;
     updateTime?: string;
     userId?: number;
@@ -541,6 +551,8 @@ declare namespace API {
   type CommodityOrderAddRequest = {
     buyNumber?: number;
     commodityId?: number;
+    deliveryStatus?: number;
+    finishStatus?: number;
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
@@ -548,6 +560,7 @@ declare namespace API {
     rentalUnit?: string;
     rentEndTime?: string;
     rentStartTime?: string;
+    sellerId?: number;
     tradeType?: number;
     userId?: number;
   };
@@ -558,10 +571,21 @@ declare namespace API {
     remark?: string;
   };
 
+  type CommodityOrderDeliverRequest = {
+    deliveryContent?: string;
+    id?: number;
+  };
+
+  type CommodityOrderFinishRequest = {
+    id?: number;
+    reviewMessage?: string;
+  };
+
   type CommodityOrderQueryRequest = {
     buyNumber?: number;
     commodityId?: number;
     current?: number;
+    deliveryStatus?: number;
     id?: number;
     pageSize?: number;
     payStatus?: number;
@@ -569,23 +593,28 @@ declare namespace API {
     remark?: string;
     rentalDuration?: number;
     rentalUnit?: string;
+    sellerId?: number;
     sortField?: string;
     sortOrder?: string;
     tradeType?: number;
     userId?: number;
     userName?: string;
     userPhone?: string;
+    finishStatus?: number;
   };
 
   type CommodityOrderUpdateRequest = {
     buyNumber?: number;
     commodityId?: number;
+    deliveryStatus?: number;
+    finishStatus?: number;
     id?: number;
     payStatus?: number;
     paymentAmount?: number;
     remark?: string;
     rentalDuration?: number;
     rentalUnit?: string;
+    sellerId?: number;
     tradeType?: number;
     userId?: number;
   };
@@ -595,6 +624,11 @@ declare namespace API {
     commodityId?: number;
     commodityName?: string;
     createTime?: string;
+    deliveryContent?: string;
+    deliveryStatus?: number;
+    deliverTime?: string;
+    finishStatus?: number;
+    finishTime?: string;
     id?: number;
     isDelete?: number;
     payStatus?: number;
@@ -604,6 +638,8 @@ declare namespace API {
     rentalUnit?: string;
     rentEndTime?: string;
     rentStartTime?: string;
+    sellerId?: number;
+    sellerName?: string;
     tradeType?: number;
     updateTime?: string;
     userId?: number;
@@ -619,7 +655,6 @@ declare namespace API {
     commodityTypeId?: number;
     tradeType?: number;
     current?: number;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isListed?: number;
@@ -733,7 +768,6 @@ declare namespace API {
     commodityName?: string;
     commodityTypeId?: number;
     tradeType?: number;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isListed?: number;
@@ -752,7 +786,6 @@ declare namespace API {
     commodityTypeName?: string;
     tradeType?: number;
     createTime?: string;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isListed?: number;
@@ -1227,6 +1260,19 @@ declare namespace API {
     total?: number;
   };
 
+  type PageUserRechargeRequestVO_ = {
+    countId?: string;
+    current?: number;
+    maxLimit?: number;
+    optimizeCountSql?: boolean;
+    orders?: OrderItem[];
+    pages?: number;
+    records?: UserRechargeRequestVO[];
+    searchCount?: boolean;
+    size?: number;
+    total?: number;
+  };
+
   type PageUserVO_ = {
     countId?: string;
     current?: number;
@@ -1406,13 +1452,10 @@ declare namespace API {
     aiRemainNumber?: number;
     balance?: number;
     createTime?: string;
-    editTime?: string;
     id?: number;
     idCardNumber?: string;
     isDelete?: number;
-    mpOpenId?: string;
     realName?: string;
-    unionId?: string;
     updateTime?: string;
     userAccount?: string;
     userAvatar?: string;
@@ -1541,7 +1584,6 @@ declare namespace API {
     commodityName?: string;
     commodityTypeId?: number;
     createTime?: string;
-    degree?: string;
     favourNum?: number;
     id?: number;
     isListed?: number;
@@ -1553,9 +1595,59 @@ declare namespace API {
     viewNum?: number;
   };
 
-  type userLoginByWxOpenUsingGETParams = {
-    /** code */
-    code: string;
+  type UserRechargeApplyRequest = {
+    amount?: number;
+    applyRemark?: string;
+    payChannel?: string;
+    proofUrl?: string;
+  };
+
+  type UserRechargeQueryRequest = {
+    current?: number;
+    id?: number;
+    pageSize?: number;
+    reviewerId?: number;
+    status?: number;
+    userId?: number;
+  };
+
+  type UserRechargeRequest = {
+    amount?: number;
+    applyRemark?: string;
+    createTime?: string;
+    id?: number;
+    isDelete?: number;
+    payChannel?: string;
+    proofUrl?: string;
+    reviewMessage?: string;
+    reviewTime?: string;
+    reviewerId?: number;
+    status?: number;
+    updateTime?: string;
+    userId?: number;
+  };
+
+  type UserRechargeRequestVO = {
+    amount?: number;
+    applyRemark?: string;
+    createTime?: string;
+    id?: number;
+    payChannel?: string;
+    proofUrl?: string;
+    reviewMessage?: string;
+    reviewTime?: string;
+    reviewerId?: number;
+    reviewerName?: string;
+    status?: number;
+    updateTime?: string;
+    userId?: number;
+    userName?: string;
+  };
+
+  type UserRechargeReviewRequest = {
+    id?: number;
+    reviewMessage?: string;
+    status?: number;
   };
 
   type UserLoginRequest = {
@@ -1569,12 +1661,10 @@ declare namespace API {
     current?: number;
     id?: number;
     idCardNumber?: string;
-    mpOpenId?: string;
     pageSize?: number;
     realName?: string;
     sortField?: string;
     sortOrder?: string;
-    unionId?: string;
     userName?: string;
     userPhone?: string;
     userProfile?: string;

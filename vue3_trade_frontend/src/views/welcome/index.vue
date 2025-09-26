@@ -1,9 +1,7 @@
 <template>
   <div style="display: flex; justify-content: center">
     <el-card style="width: 100%">
-      <el-row style="font-size: 28px"
-        >欢迎使用游戏账号租售系统 🎉
-      </el-row>
+      <el-row style="font-size: 28px">欢迎使用游戏账号租售系统 🎉 </el-row>
       <el-row style="font-size: 20px; margin: 40px 0"
         >在这里，您可以便捷地发布、租用与购买各类游戏账号，支持分类浏览、订单管理与安全交易。
         🛠
@@ -15,18 +13,19 @@
           作为用户，您可以通过注册登录账户，浏览热门账号，查看最新公告，发布/租用账号，探索账号列表并管理个人主页。
         </el-row>
         <el-row style="margin: 20px 0">
-          💻 作为管理者，我们提供了用户管理、公告管理、账号管理、订单管理、评分与类别管理等功能。
+          💻
+          作为管理者，我们提供了用户管理、公告管理、账号管理、订单管理、评分与类别管理等功能。
         </el-row>
         <el-row>
           🤝
           我们提供多种推荐能力，帮助你快速找到合适的游戏账号，并可跟踪浏览、收藏与订单等数据，优化决策。
         </el-row>
         <el-row style="margin: 20px 0">
-          👌
-          我们还提供订单详情、评论记录、收藏、私信等功能，保障交易体验。
+          👌 我们还提供订单详情、评论记录、收藏、私信等功能，保障交易体验。
         </el-row>
         <el-row style="margin-bottom: 20px"
-          >🏁 无论您是用户还是管理者，游戏账号租售系统都致力于提供稳定、安全、高效的交易服务。
+          >🏁
+          无论您是用户还是管理者，游戏账号租售系统都致力于提供稳定、安全、高效的交易服务。
         </el-row>
       </el-row>
       <el-row class="card_container" style="margin: 40px 0">

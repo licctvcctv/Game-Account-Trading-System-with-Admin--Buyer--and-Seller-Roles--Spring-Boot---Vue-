@@ -56,8 +56,12 @@
       ></el-table-column>
       <el-table-column label="出售权限" width="220">
         <template #default="{ row }">
-          <el-tag :type="getStatusTagType(row.sellPermission, row.sellApplyStatus)">
-            {{ getPermissionStatusText(row.sellPermission, row.sellApplyStatus) }}
+          <el-tag
+            :type="getStatusTagType(row.sellPermission, row.sellApplyStatus)"
+          >
+            {{
+              getPermissionStatusText(row.sellPermission, row.sellApplyStatus)
+            }}
           </el-tag>
           <el-button
             v-if="row.sellPermission === 1"
@@ -66,7 +70,8 @@
             style="margin-left: 8px"
             :loading="row.__sellLoading === 'revoke'"
             @click="handlePermission(row, 'SELL', 'revoke')"
-          >撤销</el-button>
+            >撤销</el-button
+          >
           <template v-else-if="row.sellApplyStatus === 1">
             <el-button
               size="small"
@@ -74,21 +79,27 @@
               style="margin-left: 8px"
               :loading="row.__sellLoading === 'approve'"
               @click="handlePermission(row, 'SELL', 'approve')"
-            >通过</el-button>
+              >通过</el-button
+            >
             <el-button
               size="small"
               type="danger"
               style="margin-left: 4px"
               :loading="row.__sellLoading === 'reject'"
               @click="handlePermission(row, 'SELL', 'reject')"
-            >拒绝</el-button>
+              >拒绝</el-button
+            >
           </template>
         </template>
       </el-table-column>
       <el-table-column label="出租权限" width="220">
         <template #default="{ row }">
-          <el-tag :type="getStatusTagType(row.rentPermission, row.rentApplyStatus)">
-            {{ getPermissionStatusText(row.rentPermission, row.rentApplyStatus) }}
+          <el-tag
+            :type="getStatusTagType(row.rentPermission, row.rentApplyStatus)"
+          >
+            {{
+              getPermissionStatusText(row.rentPermission, row.rentApplyStatus)
+            }}
           </el-tag>
           <el-button
             v-if="row.rentPermission === 1"
@@ -97,7 +108,8 @@
             style="margin-left: 8px"
             :loading="row.__rentLoading === 'revoke'"
             @click="handlePermission(row, 'RENT', 'revoke')"
-          >撤销</el-button>
+            >撤销</el-button
+          >
           <template v-else-if="row.rentApplyStatus === 1">
             <el-button
               size="small"
@@ -105,14 +117,16 @@
               style="margin-left: 8px"
               :loading="row.__rentLoading === 'approve'"
               @click="handlePermission(row, 'RENT', 'approve')"
-            >通过</el-button>
+              >通过</el-button
+            >
             <el-button
               size="small"
               type="danger"
               style="margin-left: 4px"
               :loading="row.__rentLoading === 'reject'"
               @click="handlePermission(row, 'RENT', 'reject')"
-            >拒绝</el-button>
+              >拒绝</el-button
+            >
           </template>
         </template>
       </el-table-column>
