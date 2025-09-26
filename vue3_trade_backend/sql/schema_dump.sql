@@ -69,6 +69,7 @@ CREATE TABLE `commodity` (
   `commodityName` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '商品名称',
   `commodityDescription` varchar(2048) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '商品简介',
   `commodityAvatar` varchar(1024) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '商品封面图',
+  `degree` varchar(255) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci DEFAULT NULL COMMENT '商品新旧程度（例如 9成新）',
   `commodityTypeId` bigint DEFAULT NULL COMMENT '商品分类 ID',
   `tradeType` tinyint DEFAULT '1' COMMENT '1-å‡ºå”® 2-å‡ºç§Ÿ',
   `adminId` bigint NOT NULL COMMENT '管理员 ID （某人创建该商品）',
@@ -86,7 +87,7 @@ CREATE TABLE `commodity` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `type_index` (`commodityTypeId`) USING BTREE,
   KEY `name_index` (`commodityName`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1970768655402725378 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1971397742970302467 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -119,7 +120,7 @@ CREATE TABLE `commodity_order` (
   `rentEndTime` datetime DEFAULT NULL COMMENT 'ç§Ÿç”¨ç»“æŸæ—¶é—´',
   `tradeType` tinyint DEFAULT NULL COMMENT 'äº¤æ˜“ç±»åž‹ 1-å‡ºå”® 2-å‡ºç§Ÿ',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1970769286414790659 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1971400188933275650 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -140,7 +141,7 @@ CREATE TABLE `commodity_score` (
   `comment` varchar(500) DEFAULT NULL COMMENT 'è¯„åˆ†è¯„è®º',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `scoreId` (`commodityId`,`userId`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1970769234808074242 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
+) ENGINE=InnoDB AUTO_INCREMENT=1971398780720791554 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -273,6 +274,8 @@ CREATE TABLE `user` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
   `userAccount` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '账号',
   `userPassword` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '密码',
+  `unionId` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '微信开放平台id',
+  `mpOpenId` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '公众号openId',
   `userName` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户昵称',
   `userAvatar` varchar(1024) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户头像',
   `userProfile` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '用户简介',
@@ -284,39 +287,15 @@ CREATE TABLE `user` (
   `rentApplyStatus` tinyint DEFAULT '0',
   `aiRemainNumber` int DEFAULT '0' COMMENT '用户 AI 剩余可使用次数',
   `balance` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '用户余额（仅AI接口调用）',
+  `editTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '编辑时间',
   `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `isDelete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除',
   `realName` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'çœŸå®žå§“å',
   `idCardNumber` varchar(32) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'èº«ä»½è¯å·',
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1968088237431898115 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='用户';
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `user_recharge_request`
---
-
-DROP TABLE IF EXISTS `user_recharge_request`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `user_recharge_request` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'id',
-  `userId` bigint NOT NULL COMMENT '申请用户',
-  `amount` decimal(10,2) NOT NULL COMMENT '充值金额',
-  `payChannel` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '支付渠道',
-  `proofUrl` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '支付凭证',
-  `applyRemark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '申请备注',
-  `status` tinyint NOT NULL DEFAULT '0' COMMENT '0-待审核 1-已通过 2-已拒绝',
-  `reviewerId` bigint DEFAULT NULL COMMENT '审核人',
-  `reviewMessage` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '审核备注',
-  `reviewTime` datetime DEFAULT NULL COMMENT '审核时间',
-  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `isDelete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除',
   PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_userId` (`userId`) USING BTREE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='用户充值申请';
+  KEY `idx_unionId` (`unionId`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=1968088237431898115 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='用户';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -358,6 +337,32 @@ CREATE TABLE `user_commodity_favorites` (
   UNIQUE KEY `unique_favorite` (`userId`,`commodityId`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=1967957478014627843 DEFAULT CHARSET=utf8mb3 ROW_FORMAT=DYNAMIC;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `user_recharge_request`
+--
+
+DROP TABLE IF EXISTS `user_recharge_request`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `user_recharge_request` (
+  `id` bigint NOT NULL COMMENT '申请编号',
+  `userId` bigint NOT NULL COMMENT '申请用户',
+  `amount` decimal(10,2) NOT NULL COMMENT '充值金额',
+  `payChannel` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '支付渠道',
+  `proofUrl` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '支付凭证',
+  `applyRemark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '申请备注',
+  `status` tinyint NOT NULL DEFAULT '0' COMMENT '0-待审核 1-已通过 2-已拒绝',
+  `reviewerId` bigint DEFAULT NULL COMMENT '审核人',
+  `reviewMessage` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '审核备注',
+  `reviewTime` datetime DEFAULT NULL COMMENT '审核时间',
+  `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `isDelete` tinyint NOT NULL DEFAULT '0' COMMENT '是否删除',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_userId` (`userId`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC COMMENT='用户充值申请';
+/*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -368,4 +373,4 @@ CREATE TABLE `user_commodity_favorites` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-09-24  8:39:14
+-- Dump completed on 2025-09-26  2:31:37
